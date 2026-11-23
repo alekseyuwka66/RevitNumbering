@@ -1,7 +1,6 @@
 // Exercise SettingsStore.Defaults, FixClassifier and NumberingEngine,
 // GridTraversal and the template parser. They are compiled only when those modules are present:
 // remove this guard (the #if line and the closing #endif) once the dependent modules are merged.
-#if M06_CROSS_MODULE_TESTS
 using RevitNumbering.Core.Model;
 using RevitNumbering.Core.Numbering;
 using RevitNumbering.Core.Ordering;
@@ -197,4 +196,3 @@ namespace RevitNumbering.Tests.Model
         }
     }
 }
-#endif
