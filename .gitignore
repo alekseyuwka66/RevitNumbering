@@ -371,3 +371,12 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /InstallerWIXSeparate/output
+
+# Agent and spec documents (kept locally, not versioned)
+/docs/
+/README.md
+MODELS.md
+CLAUDE.md
+/.claude/
+/RevitNumbering/Resources/README.md
+/RevitStartup/Resources/README.md
