@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<Configurations>Debug;Release;R2022;R2024;R2025;BuildNET48;BuildNET8</Configurations>
+		<Platforms>x64;AnyCPU</Platforms>
+		<IsPackable>false</IsPackable>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+	</PropertyGroup>
+
+	<!-- Custom configurations (R20xx, BuildNET*) are optimized like Release; Debug stays unoptimized -->
+	<PropertyGroup Condition=" '$(Configuration)' != 'Debug' ">
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- The only runtime package of the plugin (ADR-01); no Revit API and no WPF here -->
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="RevitNumbering.Tests" />
+	</ItemGroup>
+</Project>

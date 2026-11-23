@@ -8,4 +8,9 @@
 		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
 		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
 	</PropertyGroup>
+
+	<!-- Developer tools (ADR-03): msbuild /p:DevTools=true defines DEVTOOLS in every project -->
+	<PropertyGroup Condition="'$(DevTools)' == 'true'">
+		<DefineConstants>$(DefineConstants);DEVTOOLS</DefineConstants>
+	</PropertyGroup>
 </Project>

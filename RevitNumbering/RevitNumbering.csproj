@@ -81,6 +81,12 @@
 	</ItemGroup>
 
 
+	<ItemGroup>
+		<!-- Core: decisions, DTO, gateway contract, settings, log, texts, view models (ADR-01) -->
+		<ProjectReference Include="..\RevitNumbering.Core\RevitNumbering.Core.csproj" />
+	</ItemGroup>
+
+
 	<!-- Meta-configurations: rebuild every real Revit configuration of the same runtime -->
 	<Target Name="BuildNET48" AfterTargets="Build" Condition="'$(Configuration)' == 'BuildNET48'">
 		<ItemGroup>
