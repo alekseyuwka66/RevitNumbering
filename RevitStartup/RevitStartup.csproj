@@ -1,0 +1,103 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<ResolveNuGetPackages>true</ResolveNuGetPackages>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<Configurations>Debug;R2022;R2024;R2025;BuildNET48;BuildNET8</Configurations>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>
+	<Choose>
+		<When Condition=" '$(Configuration)|$(Platform)' == 'BuildNET8|x64' ">
+			<PropertyGroup>
+				<UseWPF>true</UseWPF>
+				<TargetFramework>net8.0-windows</TargetFramework>
+			</PropertyGroup>
+		</When>
+		<When Condition=" '$(Configuration)|$(Platform)' == 'R2025|x64' ">
+			<PropertyGroup>
+				<UseWPF>true</UseWPF>
+				<TargetFramework>net8.0-windows</TargetFramework>
+			</PropertyGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<UseWPF>true</UseWPF>
+				<TargetFramework>net48</TargetFramework>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+	<PropertyGroup>
+		<!--    Ignore bad image build warning-->
+		<NoWarn>MSB3246</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Forcibly set platform to 'x64' and ignore architecture-related problems -->
+		<PlatformTarget>x64</PlatformTarget>
+		<Platforms>x64</Platforms>
+		<Platform>x64</Platform>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+
+		<!-- Force the project to use the legacy debugger engine -->
+		<DebugEngines>{A87C008A-9B70-4A85-BCF6-FF280019F445}</DebugEngines>
+
+		<!-- Multiple targets can cause obj folder locking by concurrent builds -->
+		<BuildInParallel>false</BuildInParallel>
+	</PropertyGroup>
+
+	<!-- Revit version symbols for conditional compilation -->
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'R2022' Or '$(Configuration)' == 'BuildNET48' ">
+		<DefineConstants>$(DefineConstants);REVIT2022</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'R2024' ">
+		<DefineConstants>$(DefineConstants);REVIT2024;REVIT2024_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)' == 'R2025' Or '$(Configuration)' == 'BuildNET8' ">
+		<DefineConstants>$(DefineConstants);REVIT2025;REVIT2024_OR_GREATER;REVIT2025_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Revit API: compile-time only, never copied to the output -->
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2022.0.0" Condition=" '$(Configuration)|$(Platform)' == 'BuildNET48|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2025.0.0" Condition=" '$(Configuration)|$(Platform)' == 'BuildNET8|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2022.0.0" Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2022.0.0" Condition=" '$(Configuration)|$(Platform)' == 'R2022|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2024.0.0" Condition=" '$(Configuration)|$(Platform)' == 'R2024|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+		<PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2025.0.0" Condition=" '$(Configuration)|$(Platform)' == 'R2025|x64' " PrivateAssets="All" ExcludeAssets="runtime" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Plugin module: its output (and CommunityToolkit.Mvvm) lands next to RevitStartup.dll -->
+		<ProjectReference Include="..\RevitNumbering\RevitNumbering.csproj" />
+	</ItemGroup>
+
+
+	<!-- Meta-configurations: rebuild every real Revit configuration of the same runtime -->
+	<Target Name="BuildNET48" AfterTargets="Build" Condition="'$(Configuration)' == 'BuildNET48'">
+		<ItemGroup>
+			<AllConfigs Include="R2022;R2024" />
+		</ItemGroup>
+
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="Configuration=%(AllConfigs.Identity);Platform=x64" Targets="Restore;Build" BuildInParallel="false" />
+	</Target>
+
+	<Target Name="BuildNET8" AfterTargets="Build" Condition="'$(Configuration)' == 'BuildNET8'">
+		<ItemGroup>
+			<AllConfigs Include="R2025" />
+		</ItemGroup>
+
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="Configuration=%(AllConfigs.Identity);Platform=x64" Targets="Restore;Build" BuildInParallel="false" />
+	</Target>
+</Project>

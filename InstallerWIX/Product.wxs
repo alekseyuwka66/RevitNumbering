@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="RevitNumbering" Language="1033" Version="$(var.ProductVersion)" Manufacturer="RevitNumbering" UpgradeCode="{5A542426-065D-41F6-8891-1F6E772DDD75}">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+					  AllowSameVersionUpgrades="yes"
+					  Schedule="afterInstallInitialize"/>
+		<Media Id="1"
+           Cabinet="media.cab"
+           EmbedCab="yes" />
+
+		<UIRef Id="WixUI_InstallDir_RevitNumbering"/>
+
+		<PropertyRef Id="REVIT2022_INSTALLED"/>
+		<PropertyRef Id="REVIT2024_INSTALLED"/>
+		<PropertyRef Id="REVIT2025_INSTALLED"/>
+
+		<Feature Id="FeatureRevit"
+				 Title="Revit"
+				 Level="1"
+				 AllowAdvertise="no"
+				 Absent="allow"
+				 Display="expand">
+
+			<Feature Id="Feature22"
+					 Title="Revit 2022"
+					 Level="10"
+					 AllowAdvertise="no"
+					 Absent='allow'>
+				<Condition Level="1">REVIT2022_INSTALLED</Condition>
+				<ComponentGroupRef Id="PublishedComponentsRevit2022" />
+				<ComponentRef Id="cmpAddin2022"/>
+			</Feature>
+
+			<Feature Id="Feature24"
+				 Title="Revit 2024"
+				 Level="10"
+				 AllowAdvertise="no"
+				 Absent='allow'>
+				<Condition Level="1">REVIT2024_INSTALLED</Condition>
+				<ComponentGroupRef Id="PublishedComponentsRevit2024" />
+				<ComponentRef Id="cmpAddin2024"/>
+			</Feature>
+
+			<Feature Id="Feature25"
+				 Title="Revit 2025"
+				 Level="10"
+				 AllowAdvertise="no"
+				 Absent='allow'>
+				<Condition Level="1">REVIT2025_INSTALLED</Condition>
+				<ComponentGroupRef Id="PublishedComponentsRevit2025" />
+				<ComponentRef Id="cmpAddin2025"/>
+			</Feature>
+			<ComponentRef Id="cmpRegisterVersion" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<?define Name="RevitNumbering"?>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="AppDataFolder">
+				<Directory Id="Autodesk" Name="Autodesk">
+					<Directory Id="Revit" Name="Revit">
+						<Directory Id="Addins" Name="Addins">
+							<Directory Id ="Folder2022" Name="2022">
+								<Directory Id="dll2022" Name="$(var.Name)">
+									<Directory Id="REVIT2022FOLDER"/>
+								</Directory>
+								<Directory Id="REVIT2022_ADDIN_FOLDER" />
+							</Directory>
+							<Directory Id ="Folder2024" Name="2024">
+								<Directory Id="dll2024" Name="$(var.Name)">
+									<Directory Id="REVIT2024FOLDER"/>
+								</Directory>
+								<Directory Id="REVIT2024_ADDIN_FOLDER" />
+							</Directory>
+							<Directory Id ="Folder2025" Name="2025">
+								<Directory Id="dll2025" Name="$(var.Name)">
+									<Directory Id="REVIT2025FOLDER"/>
+								</Directory>
+								<Directory Id="REVIT2025_ADDIN_FOLDER" />
+							</Directory>
+						</Directory>
+					</Directory>
+				</Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+</Wix>

@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RevitNumbering", "RevitNumbering\RevitNumbering.csproj", "{6B487B6E-1960-40DE-BF7E-4E266CB24952}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RevitStartup", "RevitStartup\RevitStartup.csproj", "{88DEDA0A-3774-404E-BE50-42E331A0BF25}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "InstallerWIX", "InstallerWIX\InstallerWIX.wixproj", "{EBD137A3-01FD-4F0B-9E20-0823450A8136}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{29E911C4-D724-4A48-9109-39ABE6BCE6E2}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		build.ps1 = build.ps1
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		BuildNET48|x64 = BuildNET48|x64
+		BuildNET8|x64 = BuildNET8|x64
+		Debug|x64 = Debug|x64
+		R2022|x64 = R2022|x64
+		R2024|x64 = R2024|x64
+		R2025|x64 = R2025|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.BuildNET48|x64.ActiveCfg = BuildNET48|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.BuildNET48|x64.Build.0 = BuildNET48|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.BuildNET8|x64.ActiveCfg = BuildNET8|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.BuildNET8|x64.Build.0 = BuildNET8|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.Debug|x64.ActiveCfg = Debug|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.Debug|x64.Build.0 = Debug|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2022|x64.ActiveCfg = R2022|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2022|x64.Build.0 = R2022|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2024|x64.ActiveCfg = R2024|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2024|x64.Build.0 = R2024|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2025|x64.ActiveCfg = R2025|x64
+		{6B487B6E-1960-40DE-BF7E-4E266CB24952}.R2025|x64.Build.0 = R2025|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.BuildNET48|x64.ActiveCfg = BuildNET48|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.BuildNET48|x64.Build.0 = BuildNET48|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.BuildNET8|x64.ActiveCfg = BuildNET8|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.BuildNET8|x64.Build.0 = BuildNET8|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.Debug|x64.ActiveCfg = Debug|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.Debug|x64.Build.0 = Debug|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2022|x64.ActiveCfg = R2022|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2022|x64.Build.0 = R2022|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2024|x64.ActiveCfg = R2024|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2024|x64.Build.0 = R2024|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2025|x64.ActiveCfg = R2025|x64
+		{88DEDA0A-3774-404E-BE50-42E331A0BF25}.R2025|x64.Build.0 = R2025|x64
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.BuildNET48|x64.ActiveCfg = Release|x86
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.BuildNET8|x64.ActiveCfg = Release|x86
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.Debug|x64.ActiveCfg = Release|x86
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.R2022|x64.ActiveCfg = Release|x86
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.R2024|x64.ActiveCfg = Release|x86
+		{EBD137A3-01FD-4F0B-9E20-0823450A8136}.R2025|x64.ActiveCfg = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0B6C5E52-3A8E-4F0E-9C3B-6E2D7A1F4C90}
+	EndGlobalSection
+EndGlobal
