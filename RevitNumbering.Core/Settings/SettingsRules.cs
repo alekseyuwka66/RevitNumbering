@@ -1,3 +1,4 @@
+using RevitNumbering.Core.Model;
 using RevitNumbering.Core.Numbering;
 using RevitNumbering.Core.Templates;
 
@@ -163,8 +164,8 @@ namespace RevitNumbering.Core.Settings
         {
             return IsFinite(value)
                 && Math.Floor(value) == value
-                && value >= SettingsLimits.RowToleranceMinMm
-                && value <= SettingsLimits.RowToleranceMaxMm;
+                && value >= RowToleranceLimits.MinMm
+                && value <= RowToleranceLimits.MaxMm;
         }
 
         private static bool IsFinite(double value)

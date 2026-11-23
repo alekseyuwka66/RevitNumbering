@@ -8,8 +8,8 @@ namespace RevitNumbering.Core.Templates
     /// </summary>
     public static class TemplateScopeCheck
     {
-        // TODO: replace with TextCatalog.NoLevelGroup once the catalog is merged.
-        internal const string NoLevelGroupName = "Без уровня";
+        /// <summary>Name of the group of elements without a level.</summary>
+        internal const string NoLevelGroupName = Texts.TextCatalog.NoLevelGroup;
 
         /// <summary>
         /// MissingLevelForManyLevels with level group names when the template has no level placeholder and

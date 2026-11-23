@@ -1,4 +1,4 @@
-using System.Reflection;
+using RevitNumbering.Core.Texts;
 using RevitNumbering.Core.Model;
 using RevitNumbering.Core.Templates;
 
@@ -51,28 +51,15 @@ namespace RevitNumbering.Tests.Templates
 
         /// <summary>
         /// Text of an issue from TextCatalog.TemplateIssueText, the only "code → text" mapping.
-        /// The catalog is resolved by name: until it is in the assembly the result is
-        /// null and text assertions are skipped. After the merge replace the body with the direct call.
         /// </summary>
         public static string IssueText(TemplateIssue issue)
         {
-            var catalog = typeof(TemplateIssue).Assembly.GetType("RevitNumbering.Core.Texts.TextCatalog");
-            var method = catalog?.GetMethod("TemplateIssueText", BindingFlags.Public | BindingFlags.Static);
-            if (method == null)
-            {
-                return null;
-            }
-
-            return (string)method.Invoke(null, new object[] { issue.Code, issue.Arguments });
+            return TextCatalog.TemplateIssueText(issue.Code, issue.Arguments);
         }
 
         public static void AssertIssueText(string expected, TemplateIssue issue)
         {
-            string actual = IssueText(issue);
-            if (actual != null)
-            {
-                Assert.Equal(expected, actual);
-            }
+            Assert.Equal(expected, IssueText(issue));
         }
     }
 }

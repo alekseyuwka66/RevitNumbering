@@ -13,10 +13,6 @@ namespace RevitNumbering.Core.Settings
         /// <summary>Pause before a retry, ms.</summary>
         public const int SettingsIoRetryDelayMs = 100;
 
-        public const double RowToleranceMinMm = 1;
-
-        public const double RowToleranceMaxMm = 100000;
-
         /// <summary>Smallest allowed word number of the level code.</summary>
         public const int LevelWordNumberMin = 1;
     }

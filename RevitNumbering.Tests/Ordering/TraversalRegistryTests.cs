@@ -18,7 +18,7 @@ namespace RevitNumbering.Tests.Ordering
             Assert.Same(grid, registry.Get("Grid"));
             Assert.Same(grid, registry.Get(""));
             Assert.Same(grid, registry.Get(null));
-            Assert.Equal(1, registry.All.Count);
+            Assert.Single(registry.All);
         }
 
         [Fact]
