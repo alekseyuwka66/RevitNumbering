@@ -29,25 +29,14 @@ namespace RevitNumbering.Revit.Common
         {
             return id != null && id != ElementId.InvalidElementId;
         }
-
-        /// <summary>Key of an element for the core (levels, phases): the id as an invariant string.</summary>
-        public static string ToKey(ElementId id)
-        {
-            return ToLong(id).ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
     }
 
-    /// <summary>Internal units (feet) to the units of the core (mm, m²).</summary>
+    /// <summary>Internal units (feet) to the units of the core (mm).</summary>
     internal static class RevitUnits
     {
         public static double ToMm(double feet)
         {
             return UnitUtils.ConvertFromInternalUnits(feet, UnitTypeId.Millimeters);
-        }
-
-        public static double ToSquareMeters(double squareFeet)
-        {
-            return UnitUtils.ConvertFromInternalUnits(squareFeet, UnitTypeId.SquareMeters);
         }
     }
 }
