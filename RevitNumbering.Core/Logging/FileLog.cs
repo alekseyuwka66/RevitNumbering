@@ -7,7 +7,7 @@ namespace RevitNumbering.Core.Logging
     /// <summary>
     /// File log. No public member throws.
     /// </summary>
-    public sealed class FileLog : ILog, ILogLocation
+    public sealed class FileLog : ILog
     {
         private const string TimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
         private const string InfoLevel = "INFO";

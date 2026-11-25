@@ -1,4 +1,4 @@
-namespace RevitNumbering.Core.Domain.Numbering
+namespace RevitNumbering.Core.Numbering
 {
     /// <summary>
     /// The single value comparison of the plugin: exact, case-sensitive, after trimming.
