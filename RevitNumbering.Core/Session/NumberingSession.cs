@@ -98,9 +98,17 @@ namespace RevitNumbering.Core.Session
         /// <summary>Saved position and size of the window; null: centered.</summary>
         public WindowPlacement WindowPlacement => _settings?.Window;
 
-        /// <summary>When the window opens: settings, the last category, the active document.</summary>
-        public async Task OpenAsync()
+        /// <summary>
+        /// Before the window is shown: checks the embedded defaults and reads the settings
+        /// (the last category, the window placement). No Revit call.
+        /// </summary>
+        public void Initialize()
         {
+            if (_settings != null || StartupProblems.Count > 0)
+            {
+                return;
+            }
+
             StartupProblems = SettingsStore.CheckDefaults(CategoryKeys);
             if (StartupProblems.Count > 0)
             {
@@ -116,8 +124,16 @@ namespace RevitNumbering.Core.Session
             {
                 SettingsNotice?.Invoke(notice);
             }
+        }
 
-            await LoadAsync();
+        /// <summary>When the window opens: the last category of the active document.</summary>
+        public async Task OpenAsync()
+        {
+            Initialize();
+            if (_settings != null)
+            {
+                await LoadAsync();
+            }
         }
 
         /// <summary>Loads the category from the active document; its own pick is restored.</summary>
@@ -131,6 +147,11 @@ namespace RevitNumbering.Core.Session
             CategoryKey = key;
             _settings.LastCategory = key;
             _visibleIds = null;
+
+            // The table must not show the previous category while the new one is being read.
+            Data = null;
+            Preview = null;
+            DataChanged?.Invoke();
             await LoadAsync();
         }
 
