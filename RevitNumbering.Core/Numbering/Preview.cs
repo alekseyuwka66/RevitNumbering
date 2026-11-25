@@ -29,6 +29,12 @@ namespace RevitNumbering.Core.Numbering
         public string Value { get; set; }
 
         public long OccupiedById { get; set; }
+
+        /// <summary>The level whose counter stepped over the number; null: no level.</summary>
+        public long? LevelId { get; set; }
+
+        /// <summary>The counter value: lets the window fold neighbours into a range.</summary>
+        public int Number { get; set; }
     }
 
     /// <summary>Output of the calculation: what the window shows before Apply.</summary>

@@ -89,7 +89,13 @@ namespace RevitNumbering.Core.Numbering
                     while (occupied.TryGetValue(Key(item, candidate), out long holder))
                     {
                         // An occupied number is skipped: the element gets the next free one.
-                        preview.Skipped.Add(new SkippedNumber { Value = candidate, OccupiedById = holder });
+                        preview.Skipped.Add(new SkippedNumber
+                        {
+                            Value = candidate,
+                            OccupiedById = holder,
+                            LevelId = group.Level?.Id,
+                            Number = number,
+                        });
                         number++;
                         candidate = request.Template.Format(group.Code, number);
                     }
