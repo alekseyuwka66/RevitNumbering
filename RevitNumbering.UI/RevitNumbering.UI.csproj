@@ -28,6 +28,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- All user texts. Visual Studio regenerates Texts.Designer.cs when the .resx is edited -->
+		<EmbeddedResource Update="Resources\Texts.resx">
+			<Generator>PublicResXFileCodeGenerator</Generator>
+			<LastGenOutput>Texts.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<Compile Update="Resources\Texts.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Texts.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
 		<InternalsVisibleTo Include="RevitNumbering.UI.Tests" />
 	</ItemGroup>
 </Project>
