@@ -12,13 +12,16 @@ namespace RevitNumbering
 
         public static void Initialize(UIControlledApplication application)
         {
-            Log = FileLog.Create(application.ControlledApplication.VersionNumber);
-            Log.Info("Plugin started");
+            string version = application.ControlledApplication.VersionNumber;
+            string dataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RevitNumbering", version);
+            Log = new FileLog(Path.Combine(dataFolder, "Logs"));
+            Log.Info("[Startup] plugin started, Revit " + version);
         }
 
         public static void Shutdown(UIControlledApplication application)
         {
-            Log?.Info("Plugin stopped");
+            Log?.Info("[Shutdown] plugin stopped");
             Log = null;
         }
     }

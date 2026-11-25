@@ -5,112 +5,68 @@ using System.Text;
 namespace RevitNumbering.Core.Logging
 {
     /// <summary>
-    /// File log. No public member throws.
+    /// File log: one file per day, "numbering-yyyy-MM-dd.log" in the given folder.
+    /// No public member throws: losing a log line is better than failing an entry point.
     /// </summary>
     public sealed class FileLog : ILog
     {
+        private const string FilePrefix = "numbering-";
+        private const string FileExtension = ".log";
+        private const string DateFormat = "yyyy-MM-dd";
         private const string TimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
-        private const string InfoLevel = "INFO";
-        private const string ErrorLevel = "ERROR";
+        private const int RetentionDays = 14;
+        private const int WriteAttempts = 3;
+        private const int WriteRetryDelayMs = 20;
 
-        // One lock for all instances of the process: the host, the ribbon command and PluginEntry
-        // each create their own FileLog over the same file.
         private static readonly object WriteLock = new object();
 
-        private readonly string _revitVersion;
-        private readonly Func<DateTime> _localNow;
+        private readonly string _directory;
+        private readonly Func<DateTime> _now;
 
-        /// <param name="directory">Log folder.</param>
-        /// <param name="revitVersion">"2022" | "2024" | "2025".</param>
-        /// <param name="localNow">Local time.</param>
-        public FileLog(string directory, string revitVersion, Func<DateTime> localNow)
+        /// <param name="directory">Log folder; created on the first write.</param>
+        /// <param name="now">Local time; null: the system clock.</param>
+        public FileLog(string directory, Func<DateTime> now = null)
         {
-            LogDirectory = string.IsNullOrEmpty(directory) ? DefaultDirectory : directory;
-            _revitVersion = revitVersion ?? string.Empty;
-            _localNow = localNow ?? (() => DateTime.Now);
+            _directory = directory;
+            _now = now ?? (() => DateTime.Now);
         }
 
-        public static string DefaultDirectory
+        public string FilePath => Path.Combine(_directory, FileName(_now().Date));
+
+        public void Info(string message)
         {
-            get
-            {
-                return Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    LoggingParameters.LogDirProduct,
-                    LoggingParameters.LogDirName);
-            }
+            Write("INFO", message, null);
         }
 
-        public string LogDirectory { get; }
-
-        /// <summary>Path of the file for the current local date (the name is computed on every access).</summary>
-        public string CurrentFilePath
+        public void Warning(string message)
         {
-            get
-            {
-                try
-                {
-                    return Path.Combine(LogDirectory, BuildFileName(_revitVersion, Now().Date));
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                    return LogDirectory;
-                }
-            }
+            Write("WARNING", message, null);
         }
 
-        public static FileLog Create(string revitVersion)
+        public void Error(string message, Exception exception)
         {
-            return new FileLog(DefaultDirectory, revitVersion, () => DateTime.Now);
+            Write("ERROR", message, exception);
         }
 
-        public static string BuildFileName(string revitVersion, DateTime localDate)
+        /// <summary>Deletes log files older than the retention period, by the date in the file name.</summary>
+        public void DeleteOldFiles()
         {
-            return LoggingParameters.LogFilePrefix
-                + revitVersion
-                + "-"
-                + localDate.ToString(LoggingParameters.LogFileDateFormat, CultureInfo.InvariantCulture)
-                + LoggingParameters.LogFileExtension;
-        }
-
-        /// <summary>
-        /// Deletes log files older than the retention period by the date in the file name.
-        /// Returns the number of files actually deleted.
-        /// </summary>
-        public int DeleteExpiredFiles()
-        {
-            int deleted = 0;
             try
             {
-                if (!Directory.Exists(LogDirectory))
+                if (!Directory.Exists(_directory))
                 {
-                    return 0;
+                    return;
                 }
 
-                DateTime today = Now().Date;
-                string mask = LoggingParameters.LogFilePrefix + "*" + LoggingParameters.LogFileExtension;
-                foreach (string path in Directory.GetFiles(LogDirectory, mask))
+                DateTime today = _now().Date;
+                foreach (string path in Directory.GetFiles(_directory, FilePrefix + "*" + FileExtension))
                 {
-                    if (!TryGetFileDate(path, out DateTime fileDate))
+                    string date = Path.GetFileNameWithoutExtension(path).Substring(FilePrefix.Length);
+                    if (DateTime.TryParseExact(date, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None,
+                            out DateTime fileDate)
+                        && (today - fileDate).Days > RetentionDays)
                     {
-                        continue;
-                    }
-
-                    if ((today - fileDate).Days <= LoggingParameters.LogRetentionDays)
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        File.Delete(path);
-                        deleted++;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Busy file or no rights: skip it and go on.
-                        Debug.WriteLine(ex);
+                        TryDelete(path);
                     }
                 }
             }
@@ -118,52 +74,31 @@ namespace RevitNumbering.Core.Logging
             {
                 Debug.WriteLine(ex);
             }
-
-            return deleted;
         }
 
-        public void Info(string message)
+        private static string FileName(DateTime date)
         {
-            Write(InfoLevel, message, null);
+            return FilePrefix + date.ToString(DateFormat, CultureInfo.InvariantCulture) + FileExtension;
         }
 
-        public void Error(string message, Exception exception)
+        private static void TryDelete(string path)
         {
-            Write(ErrorLevel, message, exception);
-        }
-
-        private static bool TryGetFileDate(string path, out DateTime date)
-        {
-            date = default;
-            string fileName = Path.GetFileName(path);
-            if (fileName == null
-                || !fileName.StartsWith(LoggingParameters.LogFilePrefix, StringComparison.OrdinalIgnoreCase)
-                || !fileName.EndsWith(LoggingParameters.LogFileExtension, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return false;
+                File.Delete(path);
             }
-
-            string name = fileName.Substring(0, fileName.Length - LoggingParameters.LogFileExtension.Length);
-            int dateLength = LoggingParameters.LogFileDateFormat.Length;
-            if (name.Length < dateLength)
+            catch (Exception ex)
             {
-                return false;
+                // Busy file or no rights: skip it and go on.
+                Debug.WriteLine(ex);
             }
-
-            return DateTime.TryParseExact(name.Substring(name.Length - dateLength),
-                LoggingParameters.LogFileDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
-        }
-
-        private DateTime Now()
-        {
-            return _localNow();
         }
 
         private void Write(string level, string message, Exception exception)
         {
             try
             {
-                DateTime now = Now();
+                DateTime now = _now();
                 var entry = new StringBuilder();
                 entry.Append(now.ToString(TimeFormat, CultureInfo.InvariantCulture))
                     .Append(' ').Append(level)
@@ -174,16 +109,14 @@ namespace RevitNumbering.Core.Logging
                     entry.Append(exception).Append(Environment.NewLine);
                 }
 
-                string path = Path.Combine(LogDirectory, BuildFileName(_revitVersion, now.Date));
                 lock (WriteLock)
                 {
-                    Directory.CreateDirectory(LogDirectory);
-                    Append(path, entry.ToString());
+                    Directory.CreateDirectory(_directory);
+                    Append(Path.Combine(_directory, FileName(now.Date)), entry.ToString());
                 }
             }
             catch (Exception ex)
             {
-                // Losing a log line is better than failing an entry point.
                 Debug.WriteLine(ex);
             }
         }
@@ -202,10 +135,10 @@ namespace RevitNumbering.Core.Logging
 
                     return;
                 }
-                catch (IOException) when (attempt < LoggingParameters.LogWriteAttempts)
+                catch (IOException) when (attempt < WriteAttempts)
                 {
                     // Another Revit process of the same version is writing the file.
-                    Thread.Sleep(LoggingParameters.LogWriteRetryDelayMs);
+                    Thread.Sleep(WriteRetryDelayMs);
                 }
             }
         }

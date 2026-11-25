@@ -16,7 +16,7 @@ namespace RevitNumbering.Core.Logging
             }
             catch (OperationCanceledException)
             {
-                log?.Info("[" + operation + "] cancelled");
+                log.Info("[" + operation + "] cancelled");
             }
             catch (Exception ex)
             {
@@ -33,7 +33,7 @@ namespace RevitNumbering.Core.Logging
             }
             catch (OperationCanceledException)
             {
-                log?.Info("[" + operation + "] cancelled");
+                log.Info("[" + operation + "] cancelled");
             }
             catch (Exception ex)
             {
@@ -43,7 +43,7 @@ namespace RevitNumbering.Core.Logging
 
         private static void OnFailed(ILog log, string operation, Exception exception, Action<Exception> onError)
         {
-            log?.Error("[" + operation + "] unhandled exception", exception);
+            log.Error("[" + operation + "] unhandled exception", exception);
             try
             {
                 onError?.Invoke(exception);
@@ -51,7 +51,7 @@ namespace RevitNumbering.Core.Logging
             catch (Exception ex)
             {
                 // A failure while reporting must not reach Revit either.
-                log?.Error("[" + operation + "] error handler failed", ex);
+                log.Error("[" + operation + "] error handler failed", ex);
                 Debug.WriteLine(ex);
             }
         }
