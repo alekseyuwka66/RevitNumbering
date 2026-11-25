@@ -1,0 +1,54 @@
+<UserControl x:Class="RevitNumbering.UI.Views.ElementsTable"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:RevitNumbering.UI.Resources">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- The collection is replaced as a whole after every recalculation; rows are virtualized -->
+        <DataGrid Grid.Row="0" ItemsSource="{Binding Rows}"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                  SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#DDDDDD"
+                  EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True">
+            <DataGrid.Style>
+                <Style TargetType="DataGrid">
+                    <Style.Triggers>
+                        <!-- Another document is active: the table looks unavailable -->
+                        <DataTrigger Binding="{Binding IsTableStale}" Value="True">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.Style>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <!-- Only a mouse click zooms to the element; keyboard navigation does not -->
+                    <EventSetter Event="PreviewMouseLeftButtonUp" Handler="OnRowMouseUp" />
+                </Style>
+            </DataGrid.RowStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnId}" Binding="{Binding Id}" Width="90" />
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnName}" Binding="{Binding Name}" Width="2*" />
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnLevel}" Binding="{Binding Level}" Width="*" />
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnCurrent}" Binding="{Binding Current}" Width="*" />
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnNew}" Binding="{Binding New}" Width="*" />
+                <DataGridTextColumn Header="{x:Static res:Texts.ColumnStatus}" Binding="{Binding Status}" Width="1.6*" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Grey text in the middle of the empty table -->
+        <TextBlock Grid.Row="0" Text="{Binding PlaceholderText}" Foreground="Gray" FontSize="14"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" />
+
+        <TextBlock Grid.Row="1" Text="{Binding CountersText}" Margin="0,6,0,0" />
+        <TextBlock Grid.Row="2" Text="{Binding SkippedHint}" TextWrapping="Wrap" Foreground="#555555"
+                   Margin="0,2,0,0" />
+    </Grid>
+</UserControl>
