@@ -11,9 +11,11 @@ namespace RevitStartup.Application
     /// </summary>
     public class RibbonManager
     {
-        // Placeholder texts: the final ribbon texts are defined by the plugin specification.
+        // Texts of the ribbon.
         const string TabName = "RevitNumbering";
-        const string PanelName = "RevitNumbering";
+        const string PanelName = "Нумерация";
+        const string ButtonText = "Нумерация";
+        const string ButtonToolTip = "Нумерация элементов: стены, двери, окна, помещения";
 
         // The command lives in the plugin module assembly, deployed next to RevitStartup.dll.
         const string ModuleAssemblyName = "RevitNumbering.dll";
@@ -42,7 +44,10 @@ namespace RevitStartup.Application
 
             RibbonPanel panel = application.CreateRibbonPanel(TabName, PanelName);
 
-            var button = new PushButtonData("OpenWindowButton", "Open window", ModuleAssemblyPath, OpenWindowCommandClass);
+            var button = new PushButtonData("OpenWindowButton", ButtonText, ModuleAssemblyPath, OpenWindowCommandClass)
+            {
+                ToolTip = ButtonToolTip
+            };
             panel.AddItem(button);
 
             return Result.Succeeded;

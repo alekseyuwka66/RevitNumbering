@@ -5,7 +5,7 @@ using Autodesk.Revit.UI;
 namespace RevitNumbering.Commands
 {
     /// <summary>
-    /// Ribbon command: opens the plugin window.
+    /// Ribbon command: shows the plugin window or activates the one that is already open.
     /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
@@ -13,6 +13,8 @@ namespace RevitNumbering.Commands
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            // Failures are caught, logged and shown inside.
+            PluginEntry.OpenWindow(commandData.Application);
             return Result.Succeeded;
         }
     }

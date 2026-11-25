@@ -79,7 +79,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Plugin module: its output (and CommunityToolkit.Mvvm) lands next to RevitStartup.dll -->
+		<!-- Plugin module: its output (with Core, UI and their packages) lands next to RevitStartup.dll -->
 		<ProjectReference Include="..\RevitNumbering\RevitNumbering.csproj" />
 	</ItemGroup>
 

@@ -23,7 +23,8 @@ namespace RevitStartup.Application
             }
             catch (Exception ex)
             {
-                // PluginEntry has already written the details to its log; the ribbon is created anyway (AA-106).
+                // PluginEntry has already written the details to its log; the ribbon is created anyway:
+                // its button then tells the user that the plugin did not start.
                 System.Diagnostics.Debug.WriteLine(ex);
             }
 
