@@ -35,18 +35,20 @@ namespace RevitNumbering.Core.Settings
         [DataMember(Order = 5)]
         public int LevelWordNumber { get; set; }
 
-        [DataMember(Order = 6)]
-        public double RowToleranceMm { get; set; }
-
         /// <summary>"SkipOccupied" | "AllowDuplicates".</summary>
-        [DataMember(Order = 7)]
+        [DataMember(Order = 6)]
         public string ConflictStrategy { get; set; }
 
-        [DataMember(Order = 8)]
+        [DataMember(Order = 7)]
         public bool AppendMode { get; set; }
 
-        /// <summary>Reserved: null in this version.</summary>
-        [DataMember(Order = 9)]
+        /// <summary>
+        /// Traversal of the category: strategy key + parameter values (the row tolerance lives here).
+        /// In this version the key always equals the general traversal key and the general
+        /// corner / direction win (F6-01: one order for all categories); per-category order (F9-04)
+        /// = stop ignoring the key. See TraversalResolver.
+        /// </summary>
+        [DataMember(Order = 8)]
         public TraversalSettings Traversal { get; set; }
     }
 

@@ -1,5 +1,7 @@
-using RevitNumbering.Core.Model;
-using RevitNumbering.Core.Numbering;
+using RevitNumbering.Core.Common;
+using RevitNumbering.Core.Domain.Elements;
+using RevitNumbering.Core.Reading;
+using RevitNumbering.Core.Domain.Numbering;
 
 namespace RevitNumbering.Core.Writing
 {
@@ -49,7 +51,7 @@ namespace RevitNumbering.Core.Writing
         /// is finished or when the document has changed: duplicates are then taken from the written values
         /// and the plan; otherwise from the re-read data.
         /// </summary>
-        public static ApplySummary Build(NumberingPlan plan, WriteReport report, CategorySnapshot reread)
+        public static ApplySummary Build(NumberingPlan plan, WriteReport report, CategoryElements reread)
         {
             if (plan == null)
             {
@@ -90,12 +92,11 @@ namespace RevitNumbering.Core.Writing
         }
 
         /// <summary>Groups of two or more elements with one value where at least one was written now.</summary>
-        private static List<DuplicateValue> DuplicatesByReread(CategorySnapshot reread,
+        private static List<DuplicateValue> DuplicatesByReread(CategoryElements reread,
             Dictionary<long, string> written)
         {
-            bool byPhase = reread.Category != null && reread.Category.ConflictScope == ConflictScope.Phase;
             var groups = new Dictionary<string, Dictionary<string, List<long>>>(StringComparer.Ordinal);
-            foreach (ElementData element in reread.Elements)
+            foreach (NumberableElement element in reread.Elements)
             {
                 string value = ValueComparer.Normalize(element.CurrentValue);
                 if (value.Length == 0)
@@ -103,7 +104,7 @@ namespace RevitNumbering.Core.Writing
                     continue;
                 }
 
-                string scope = byPhase ? element.PhaseKey ?? string.Empty : string.Empty;
+                string scope = element.ConflictGroup ?? string.Empty;
                 if (!groups.TryGetValue(scope, out Dictionary<string, List<long>> byValue))
                 {
                     byValue = new Dictionary<string, List<long>>(StringComparer.Ordinal);

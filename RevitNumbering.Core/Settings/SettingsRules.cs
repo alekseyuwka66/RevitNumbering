@@ -1,6 +1,5 @@
-using RevitNumbering.Core.Model;
-using RevitNumbering.Core.Numbering;
-using RevitNumbering.Core.Templates;
+using RevitNumbering.Core.Domain.Numbering;
+using RevitNumbering.Core.Domain.Templates;
 
 namespace RevitNumbering.Core.Settings
 {
@@ -41,14 +40,16 @@ namespace RevitNumbering.Core.Settings
                 return "номер слова меньше 1";
             }
 
-            if (!IsTolerance(category.RowToleranceMm))
-            {
-                return "допуск вне диапазона";
-            }
-
             if (!IsOneOf(category.ConflictStrategy, ConflictStrategies))
             {
                 return "неизвестная стратегия конфликтов";
+            }
+
+            // Values of strategy parameters are checked by the strategy itself (StrategyArguments):
+            // an invalid value falls back to the parameter default.
+            if (category.Traversal != null && string.IsNullOrEmpty(category.Traversal.StrategyKey))
+            {
+                return "не задан ключ стратегии обхода категории";
             }
 
             return null;
@@ -76,9 +77,7 @@ namespace RevitNumbering.Core.Settings
                         Parameters = CopyParameters(raw.Traversal.Parameters)
                             ?? new Dictionary<string, string>(StringComparer.Ordinal)
                     },
-                LastCategoryKey = string.IsNullOrEmpty(raw.LastCategoryKey)
-                    ? SettingsDefaults.DefaultCategory
-                    : raw.LastCategoryKey,
+                LastCategoryKey = string.IsNullOrEmpty(raw.LastCategoryKey) ? null : raw.LastCategoryKey,
                 Window = IsWindowValid(raw.Window) ? Copy(raw.Window) : null,
                 Categories = new Dictionary<string, CategorySettings>(StringComparer.Ordinal)
             };
@@ -102,7 +101,7 @@ namespace RevitNumbering.Core.Settings
             return result;
         }
 
-        /// <summary>Copy of a category as it is stored: no per-category traversal, parameter name is not null.</summary>
+        /// <summary>Copy of a category as it is stored: parameter name is not null.</summary>
         public static CategorySettings CopyOwnCategory(CategorySettings source)
         {
             return new CategorySettings
@@ -112,10 +111,9 @@ namespace RevitNumbering.Core.Settings
                 LevelParameterName = source.LevelParameterName ?? string.Empty,
                 LevelCodePart = source.LevelCodePart,
                 LevelWordNumber = source.LevelWordNumber,
-                RowToleranceMm = source.RowToleranceMm,
                 ConflictStrategy = source.ConflictStrategy,
                 AppendMode = source.AppendMode,
-                Traversal = null
+                Traversal = source.Traversal == null ? null : Copy(source.Traversal)
             };
         }
 
@@ -158,14 +156,6 @@ namespace RevitNumbering.Core.Settings
         private static bool IsOneOf(string value, string[] allowed)
         {
             return value != null && Array.IndexOf(allowed, value) >= 0;
-        }
-
-        private static bool IsTolerance(double value)
-        {
-            return IsFinite(value)
-                && Math.Floor(value) == value
-                && value >= RowToleranceLimits.MinMm
-                && value <= RowToleranceLimits.MaxMm;
         }
 
         private static bool IsFinite(double value)

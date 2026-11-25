@@ -1,4 +1,4 @@
-using RevitNumbering.Core.Model;
+using RevitNumbering.Core.Common;
 
 namespace RevitNumbering.Core.Writing
 {

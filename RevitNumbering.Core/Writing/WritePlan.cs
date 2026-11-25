@@ -1,5 +1,8 @@
-using RevitNumbering.Core.Model;
-using RevitNumbering.Core.Numbering;
+using RevitNumbering.Core.Common;
+using RevitNumbering.Core.Documents;
+using RevitNumbering.Core.Domain.Elements;
+using RevitNumbering.Core.Reading;
+using RevitNumbering.Core.Domain.Numbering;
 
 namespace RevitNumbering.Core.Writing
 {
@@ -73,18 +76,14 @@ namespace RevitNumbering.Core.Writing
 
         /// <summary>
         /// Write plan from the preview: WillChange and Conflict rows in plan.Rows order,
-        /// ExpectedCurrentValue is the snapshot value of the element.
+        /// ExpectedCurrentValue is the loaded value of the element. Document, generation and category
+        /// come from the loaded data the plan was computed from (one row per loaded element).
         /// </summary>
-        public static WritePlan Create(DocumentKey document, CategorySnapshot snapshot, NumberingPlan plan)
+        public static WritePlan Create(CategoryElements loaded, NumberingPlan plan)
         {
-            if (document == null)
+            if (loaded == null)
             {
-                throw new ArgumentNullException(nameof(document));
-            }
-
-            if (snapshot == null)
-            {
-                throw new ArgumentNullException(nameof(snapshot));
+                throw new ArgumentNullException(nameof(loaded));
             }
 
             if (plan == null)
@@ -92,19 +91,13 @@ namespace RevitNumbering.Core.Writing
                 throw new ArgumentNullException(nameof(plan));
             }
 
-            if (!document.Equals(snapshot.Document))
+            if (plan.Rows.Count != loaded.Elements.Count)
             {
-                throw new ArgumentException("The snapshot belongs to another document.", nameof(snapshot));
-            }
-
-            if (plan.SnapshotGeneration != snapshot.Generation)
-            {
-                throw new ArgumentException("The plan was computed from another snapshot generation.",
-                    nameof(plan));
+                throw new ArgumentException("The plan was computed from other loaded data.", nameof(plan));
             }
 
             var currentValues = new Dictionary<long, string>();
-            foreach (ElementData element in snapshot.Elements)
+            foreach (NumberableElement element in loaded.Elements)
             {
                 currentValues[element.Id] = element.CurrentValue;
             }
@@ -119,14 +112,14 @@ namespace RevitNumbering.Core.Writing
 
                 if (!currentValues.TryGetValue(row.Id, out string currentValue))
                 {
-                    throw new ArgumentException("The snapshot has no element " + row.Id + ".", nameof(plan));
+                    throw new ArgumentException("The loaded data has no element " + row.Id + ".", nameof(plan));
                 }
 
                 items.Add(new WriteItem(row.Id, currentValue, row.NewValue));
             }
 
-            return new WritePlan(document, plan.SnapshotGeneration, snapshot.Category?.Key,
-                snapshot.Category?.DisplayName, items);
+            return new WritePlan(loaded.Document, loaded.Generation, loaded.Category?.Key,
+                loaded.Category?.DisplayName, items);
         }
     }
 }

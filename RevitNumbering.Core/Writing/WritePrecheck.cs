@@ -1,4 +1,4 @@
-using RevitNumbering.Core.Numbering;
+using RevitNumbering.Core.Domain.Numbering;
 
 namespace RevitNumbering.Core.Writing
 {

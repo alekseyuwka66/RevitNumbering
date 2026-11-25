@@ -1,5 +1,6 @@
 using RevitNumbering.Core.Logging;
-using RevitNumbering.Core.Model;
+using RevitNumbering.Core.Domain.Categories;
+using RevitNumbering.Core.Domain.Ordering;
 
 namespace RevitNumbering.Core.Settings
 {
@@ -228,12 +229,21 @@ namespace RevitNumbering.Core.Settings
             return new SettingsLoadResult(Normalize(imported), SettingsLoadStatus.Ok);
         }
 
-        /// <summary>Category defaults only from CategoryInfo data and the general defaults.</summary>
-        public static CategorySettings Defaults(CategoryInfo category)
+        /// <summary>
+        /// Category defaults: the template from the category, strategy parameters from the strategy
+        /// completed by the category overrides of the composition root (F6-05). No category key is known here.
+        /// </summary>
+        public static CategorySettings Defaults(INumberingCategory category, ITraversalStrategy strategy,
+            CategoryStrategyDefaults strategyDefaults)
         {
             if (category == null)
             {
                 throw new ArgumentNullException(nameof(category));
+            }
+
+            if (strategy == null)
+            {
+                throw new ArgumentNullException(nameof(strategy));
             }
 
             return new CategorySettings
@@ -243,10 +253,13 @@ namespace RevitNumbering.Core.Settings
                 LevelParameterName = SettingsDefaults.DefaultLevelParameterName,
                 LevelCodePart = SettingsDefaults.DefaultLevelCodePart,
                 LevelWordNumber = SettingsDefaults.DefaultLevelWordNumber,
-                RowToleranceMm = category.DefaultRowToleranceMm,
                 ConflictStrategy = SettingsDefaults.DefaultStrategy,
                 AppendMode = SettingsDefaults.DefaultAppend,
-                Traversal = null
+                Traversal = new TraversalSettings
+                {
+                    StrategyKey = strategy.Key,
+                    Parameters = (strategyDefaults ?? new CategoryStrategyDefaults()).Resolve(category, strategy)
+                }
             };
         }
 

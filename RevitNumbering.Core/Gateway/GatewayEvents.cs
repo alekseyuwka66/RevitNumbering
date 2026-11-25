@@ -1,5 +1,3 @@
-using RevitNumbering.Core.Model;
-
 namespace RevitNumbering.Core.Gateway
 {
     public enum RequestState
@@ -24,16 +22,6 @@ namespace RevitNumbering.Core.Gateway
         public string RequestName { get; }
     }
 
-    public sealed class DocumentEventArgs : EventArgs
-    {
-        public DocumentEventArgs(DocumentKey document)
-        {
-            Document = document;
-        }
-
-        public DocumentKey Document { get; }
-    }
-
     public sealed class LoadProgress
     {
         public LoadProgress(int loaded, int total)
@@ -45,5 +33,19 @@ namespace RevitNumbering.Core.Gateway
         public int Loaded { get; }
 
         public int Total { get; }
+    }
+
+    /// <summary>
+    /// State of the requests to the Revit API context (busy notice, cancel button) and the host lifecycle.
+    /// Knows nothing about what the requests do.
+    /// </summary>
+    public interface IRequestService
+    {
+        event EventHandler<RequestStateEventArgs> RequestStateChanged;
+
+        event EventHandler ApplicationClosing;
+
+        /// <summary>Cancels requests that have not started yet. true: at least one was cancelled.</summary>
+        bool CancelPending();
     }
 }

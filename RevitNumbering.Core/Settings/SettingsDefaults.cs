@@ -1,68 +1,54 @@
-using RevitNumbering.Core.Numbering;
-using RevitNumbering.Core.Templates;
+using RevitNumbering.Core.Domain.Numbering;
+using RevitNumbering.Core.Domain.Ordering;
+using RevitNumbering.Core.Domain.Templates;
 
 namespace RevitNumbering.Core.Settings
 {
     /// <summary>
-    /// Default values of the settings file.
+    /// Default values of the settings file. Keys of categories and of strategy parameters are not repeated
+    /// here: the default category comes from the category registry, traversal parameters from the strategy.
     /// </summary>
     internal static class SettingsDefaults
     {
-        public const string DefaultCategory = "Doors";
-
-        /// <summary>Strategy key.</summary>
-        public const string DefaultTraversalStrategyKey = "grid";
-
-        /// <summary>Parameter "corner".</summary>
-        public const string DefaultTraversalCornerKey = "corner";
-
-        /// <summary>Value of "corner".</summary>
-        public const string DefaultTraversalCorner = "TopLeft";
-
-        /// <summary>Parameter "direction".</summary>
-        public const string DefaultTraversalDirectionKey = "direction";
-
-        /// <summary>Value of "direction".</summary>
-        public const string DefaultTraversalDirection = "Rows";
-
-        /// <summary>Source.</summary>
         public const string DefaultLevelCodeSource = nameof(LevelCodeSource.LevelName);
 
-        /// <summary>Part.</summary>
         public const string DefaultLevelCodePart = nameof(LevelCodePart.Whole);
 
-        /// <summary>Word number.</summary>
         public const int DefaultLevelWordNumber = 1;
 
-        /// <summary>Parameter name.</summary>
         public const string DefaultLevelParameterName = "";
 
         public const string DefaultStrategy = nameof(ConflictStrategy.SkipOccupied);
 
         public const bool DefaultAppend = false;
 
-        /// <summary>General defaults: no file or a corrupted file. Always a new object.</summary>
+        /// <summary>
+        /// General defaults: no file or a corrupted file. Always a new object.
+        /// LastCategoryKey is null: the window takes the first registered category.
+        /// </summary>
         public static NumberingSettings CreateGeneral()
         {
             return new NumberingSettings
             {
                 SchemaVersion = SettingsLimits.SettingsSchema,
                 Traversal = CreateTraversal(),
-                LastCategoryKey = DefaultCategory,
+                LastCategoryKey = null,
                 Window = null,
                 Categories = new Dictionary<string, CategorySettings>(StringComparer.Ordinal)
             };
         }
 
+        /// <summary>The "grid" strategy with the defaults of its general parameters (corner, direction).</summary>
         public static TraversalSettings CreateTraversal()
         {
+            var grid = new GridTraversal();
             return new TraversalSettings
             {
-                StrategyKey = DefaultTraversalStrategyKey,
+                StrategyKey = grid.Key,
                 Parameters = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
-                    { DefaultTraversalCornerKey, DefaultTraversalCorner },
-                    { DefaultTraversalDirectionKey, DefaultTraversalDirection }
+                    { grid.Corner.Key, grid.Corner.DefaultValue },
+                    { grid.Direction.Key, grid.Direction.DefaultValue }
                 }
             };
         }

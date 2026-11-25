@@ -3,7 +3,7 @@
   <AddIn Type="Application">
     <Name>RevitNumbering</Name>
     <Assembly>RevitNumbering\RevitStartup.dll</Assembly>
-    <ClientId>0CD8BF78-17A3-42A3-9D21-8C230DED0454</ClientId>
+    <ClientId>425FEA2E-3E39-457D-AFCD-9303FD56BCA6</ClientId>
     <FullClassName>RevitStartup.Application.ExternalApplication</FullClassName>
     <VendorId>RevitNumbering</VendorId>
     <VendorDescription>RevitNumbering</VendorDescription>

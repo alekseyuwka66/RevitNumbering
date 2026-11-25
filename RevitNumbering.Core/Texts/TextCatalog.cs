@@ -1,7 +1,8 @@
 using System.Globalization;
-using RevitNumbering.Core.Model;
-using RevitNumbering.Core.Numbering;
-using RevitNumbering.Core.Templates;
+using RevitNumbering.Core.Common;
+using RevitNumbering.Core.Domain.Elements;
+using RevitNumbering.Core.Domain.Numbering;
+using RevitNumbering.Core.Domain.Templates;
 using RevitNumbering.Core.Writing;
 
 namespace RevitNumbering.Core.Texts
@@ -118,18 +119,8 @@ namespace RevitNumbering.Core.Texts
 
         public const string StatusOut = "Вне охвата";
 
-        /// <summary>{0} is the user name.</summary>
-        public const string FixOwned = "занят {0}";
-
-        public const string FixReadonly = "параметр только для чтения";
-
-        public const string FixNotPlaced = "Не размещено";
-
-        public const string FixNotEnclosed = "Не окружено";
-
-        public const string FixRedundant = "Избыточное";
-
-        public const string FixNoLevel = "нет уровня";
+        // Fix reason texts live in the reasons themselves (FixReason.Text): common ones in FixReason,
+        // category ones next to the element class of the category.
 
         public const string NoLevelGroup = "Без уровня";
 
@@ -309,27 +300,15 @@ namespace RevitNumbering.Core.Texts
             }
         }
 
+        /// <summary>Text of a fix reason; null gives "". {0} in the reason text is the owner name.</summary>
         public static string FixReasonText(FixReason reason, string ownerName)
         {
-            switch (reason)
+            if (reason == null)
             {
-                case FixReason.None:
-                    return string.Empty;
-                case FixReason.OwnedByOtherUser:
-                    return string.IsNullOrEmpty(ownerName) ? Format(FixOwned).TrimEnd() : Format(FixOwned, ownerName);
-                case FixReason.ReadOnlyParameter:
-                    return FixReadonly;
-                case FixReason.RoomNotPlaced:
-                    return FixNotPlaced;
-                case FixReason.RoomNotEnclosed:
-                    return FixNotEnclosed;
-                case FixReason.RoomRedundant:
-                    return FixRedundant;
-                case FixReason.NoLevel:
-                    return FixNoLevel;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(reason), reason, null);
+                return string.Empty;
             }
+
+            return string.IsNullOrEmpty(ownerName) ? Format(reason.Text).TrimEnd() : Format(reason.Text, ownerName);
         }
 
         public static string RowStatusText(RowStatus status, FixReason reason, string ownerName)

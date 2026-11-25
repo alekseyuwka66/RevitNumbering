@@ -15,18 +15,55 @@ namespace RevitStartup.Application
     {
         public Result OnStartup(UIControlledApplication application)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
+
             try
             {
-                AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
+                InitializePlugin(application);
+            }
+            catch (Exception ex)
+            {
+                // PluginEntry has already written the details to its log; the ribbon is created anyway (AA-106).
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+
+            try
+            {
                 RibbonManager.OnStartup(application);
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+
             return Result.Succeeded;
         }
 
         public Result OnShutdown(UIControlledApplication application)
         {
+            try
+            {
+                ShutdownPlugin(application);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+
             return Result.Succeeded;
+        }
+
+        /// <summary>Separate method: types of RevitNumbering load only after AssemblyResolve is subscribed.</summary>
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void InitializePlugin(UIControlledApplication application)
+        {
+            RevitNumbering.PluginEntry.Initialize(application);
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void ShutdownPlugin(UIControlledApplication application)
+        {
+            RevitNumbering.PluginEntry.Shutdown(application);
         }
 
         public static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
