@@ -61,6 +61,105 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Настройки нумерации изменены. Сохранить конфигурацию?.
+        /// </summary>
+        public static string AskSave {
+            get {
+                return ResourceManager.GetString("AskSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Применить.
+        /// </summary>
+        public static string ButtonApply {
+            get {
+                return ResourceManager.GetString("ButtonApply", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Отменить.
+        /// </summary>
+        public static string ButtonCancel {
+            get {
+                return ResourceManager.GetString("ButtonCancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Закрыть.
+        /// </summary>
+        public static string ButtonClose {
+            get {
+                return ResourceManager.GetString("ButtonClose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Скопировать журнал.
+        /// </summary>
+        public static string ButtonCopyLog {
+            get {
+                return ResourceManager.GetString("ButtonCopyLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Экспорт.
+        /// </summary>
+        public static string ButtonExport {
+            get {
+                return ResourceManager.GetString("ButtonExport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Импорт.
+        /// </summary>
+        public static string ButtonImport {
+            get {
+                return ResourceManager.GetString("ButtonImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Выбрать в модели.
+        /// </summary>
+        public static string ButtonPick {
+            get {
+                return ResourceManager.GetString("ButtonPick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Обновить.
+        /// </summary>
+        public static string ButtonRefresh {
+            get {
+                return ResourceManager.GetString("ButtonRefresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Сбросить выбор.
+        /// </summary>
+        public static string ButtonResetPick {
+            get {
+                return ResourceManager.GetString("ButtonResetPick", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Сохранить конфигурацию.
+        /// </summary>
+        public static string ButtonSave {
+            get {
+                return ResourceManager.GetString("ButtonSave", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Двери.
         /// </summary>
         public static string Category_Doors {
@@ -97,11 +196,434 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Не удалось открыть окно нумерации. Подробности записаны в журнал:.
+        ///   Looks up a localized string similar to Текущее значение.
+        /// </summary>
+        public static string ColumnCurrent {
+            get {
+                return ResourceManager.GetString("ColumnCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ID.
+        /// </summary>
+        public static string ColumnId {
+            get {
+                return ResourceManager.GetString("ColumnId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Уровень.
+        /// </summary>
+        public static string ColumnLevel {
+            get {
+                return ResourceManager.GetString("ColumnLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Имя.
+        /// </summary>
+        public static string ColumnName {
+            get {
+                return ResourceManager.GetString("ColumnName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Новое значение.
+        /// </summary>
+        public static string ColumnNew {
+            get {
+                return ResourceManager.GetString("ColumnNew", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Статус.
+        /// </summary>
+        public static string ColumnStatus {
+            get {
+                return ResourceManager.GetString("ColumnStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нижний левый.
+        /// </summary>
+        public static string Corner_BottomLeft {
+            get {
+                return ResourceManager.GetString("Corner_BottomLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нижний правый.
+        /// </summary>
+        public static string Corner_BottomRight {
+            get {
+                return ResourceManager.GetString("Corner_BottomRight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Верхний левый.
+        /// </summary>
+        public static string Corner_TopLeft {
+            get {
+                return ResourceManager.GetString("Corner_TopLeft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Верхний правый.
+        /// </summary>
+        public static string Corner_TopRight {
+            get {
+                return ResourceManager.GetString("Corner_TopRight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Изменится: {0} · Зафиксировано: {1} · Пропущено занятых номеров: {2}.
+        /// </summary>
+        public static string Counters {
+            get {
+                return ResourceManager.GetString("Counters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Столбцами.
+        /// </summary>
+        public static string DirectionColumns {
+            get {
+                return ResourceManager.GetString("DirectionColumns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Рядами.
+        /// </summary>
+        public static string DirectionRows {
+            get {
+                return ResourceManager.GetString("DirectionRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл журнала скопирован в буфер обмена — вставьте его в письмо или сообщение..
+        /// </summary>
+        public static string ErrorLogCopied {
+            get {
+                return ResourceManager.GetString("ErrorLogCopied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не удалось скопировать журнал. Файл журнала: {0}.
+        /// </summary>
+        public static string ErrorLogNotCopied {
+            get {
+                return ResourceManager.GetString("ErrorLogNotCopied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Произошла непредвиденная ошибка. Подробности записаны в журнал. Отправьте журнал разработчику..
+        /// </summary>
+        public static string ErrorMessage {
+            get {
+                return ResourceManager.GetString("ErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нумерация элементов — ошибка.
+        /// </summary>
+        public static string ErrorTitle {
+            get {
+                return ResourceManager.GetString("ErrorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to numbering-settings.json.
+        /// </summary>
+        public static string ExportFileName {
+            get {
+                return ResourceManager.GetString("ExportFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Конфигурация импортирована; прежний файл настроек сохранён с расширением .bak.
+        /// </summary>
+        public static string ImportResult_Imported {
+            get {
+                return ResourceManager.GetString("ImportResult_Imported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл не является конфигурацией нумерации или содержит неверные настройки — конфигурация не изменена.
+        /// </summary>
+        public static string ImportResult_Invalid {
+            get {
+                return ResourceManager.GetString("ImportResult_Invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл создан более новой версией плагина — конфигурация не изменена.
+        /// </summary>
+        public static string ImportResult_NewerSchema {
+            get {
+                return ResourceManager.GetString("ImportResult_NewerSchema", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не удалось заменить файл настроек — конфигурация не изменена.
+        /// </summary>
+        public static string ImportResult_SaveFailed {
+            get {
+                return ResourceManager.GetString("ImportResult_SaveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл не читается — конфигурация не изменена.
+        /// </summary>
+        public static string ImportResult_Unreadable {
+            get {
+                return ResourceManager.GetString("ImportResult_Unreadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Конфигурация нумерации (*.json)|*.json.
+        /// </summary>
+        public static string JsonFilter {
+            get {
+                return ResourceManager.GetString("JsonFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Категория:.
+        /// </summary>
+        public static string LabelCategory {
+            get {
+                return ResourceManager.GetString("LabelCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Начальный угол.
+        /// </summary>
+        public static string LabelCorner {
+            get {
+                return ResourceManager.GetString("LabelCorner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Направление.
+        /// </summary>
+        public static string LabelDirection {
+            get {
+                return ResourceManager.GetString("LabelDirection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Код уровня (из имени уровня).
+        /// </summary>
+        public static string LabelLevelCode {
+            get {
+                return ResourceManager.GetString("LabelLevelCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Порядок нумерации.
+        /// </summary>
+        public static string LabelOrdering {
+            get {
+                return ResourceManager.GetString("LabelOrdering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Допуск ряда, мм.
+        /// </summary>
+        public static string LabelRowTolerance {
+            get {
+                return ResourceManager.GetString("LabelRowTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Поиск:.
+        /// </summary>
+        public static string LabelSearch {
+            get {
+                return ResourceManager.GetString("LabelSearch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Шаблон номера.
+        /// </summary>
+        public static string LabelTemplate {
+            get {
+                return ResourceManager.GetString("LabelTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Номер слова.
+        /// </summary>
+        public static string LabelWordNumber {
+            get {
+                return ResourceManager.GetString("LabelWordNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Слова в имени уровня разделяются пробелом и знаком «_»..
+        /// </summary>
+        public static string LevelCodeHint {
+            get {
+                return ResourceManager.GetString("LevelCodeHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Последнее слово.
+        /// </summary>
+        public static string LevelCodePart_LastWord {
+            get {
+                return ResourceManager.GetString("LevelCodePart_LastWord", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Имя целиком.
+        /// </summary>
+        public static string LevelCodePart_Whole {
+            get {
+                return ResourceManager.GetString("LevelCodePart_Whole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Слово с номером.
+        /// </summary>
+        public static string LevelCodePart_Word {
+            get {
+                return ResourceManager.GetString("LevelCodePart_Word", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to нет уровня.
+        /// </summary>
+        public static string LockReason_NoLevel {
+            get {
+                return ResourceManager.GetString("LockReason_NoLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to нет.
+        /// </summary>
+        public static string LockReason_None {
+            get {
+                return ResourceManager.GetString("LockReason_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to нет положения в модели.
+        /// </summary>
+        public static string LockReason_NotOrderable {
+            get {
+                return ResourceManager.GetString("LockReason_NotOrderable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to занят пользователем {0}.
+        /// </summary>
+        public static string LockReason_OwnedByOther {
+            get {
+                return ResourceManager.GetString("LockReason_OwnedByOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to параметр только для чтения.
+        /// </summary>
+        public static string LockReason_ReadOnly {
+            get {
+                return ResourceManager.GetString("LockReason_ReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to помещение не окружено.
+        /// </summary>
+        public static string LockReason_RoomNotEnclosed {
+            get {
+                return ResourceManager.GetString("LockReason_RoomNotEnclosed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to помещение не размещено.
+        /// </summary>
+        public static string LockReason_RoomNotPlaced {
+            get {
+                return ResourceManager.GetString("LockReason_RoomNotPlaced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to избыточное помещение.
+        /// </summary>
+        public static string LockReason_RoomRedundant {
+            get {
+                return ResourceManager.GetString("LockReason_RoomRedundant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Без уровня.
+        /// </summary>
+        public static string NoLevel {
+            get {
+                return ResourceManager.GetString("NoLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не удалось открыть окно нумерации. Подробности записаны в журнал: {0}.
         /// </summary>
         public static string OpenFailed {
             get {
                 return ResourceManager.GetString("OpenFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Сетка: рядами или столбцами от угла.
+        /// </summary>
+        public static string Ordering_Grid {
+            get {
+                return ResourceManager.GetString("Ordering_Grid", resourceCulture);
             }
         }
         
@@ -115,6 +637,60 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to В категории нет элементов.
+        /// </summary>
+        public static string PlaceholderEmptyCategory {
+            get {
+                return ResourceManager.GetString("PlaceholderEmptyCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Семейства не поддерживаются.
+        /// </summary>
+        public static string PlaceholderFamily {
+            get {
+                return ResourceManager.GetString("PlaceholderFamily", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Загрузка….
+        /// </summary>
+        public static string PlaceholderLoading {
+            get {
+                return ResourceManager.GetString("PlaceholderLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Данные не загружены — нажмите «Обновить».
+        /// </summary>
+        public static string PlaceholderNoData {
+            get {
+                return ResourceManager.GetString("PlaceholderNoData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Откройте проект.
+        /// </summary>
+        public static string PlaceholderNoProject {
+            get {
+                return ResourceManager.GetString("PlaceholderNoProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ничего не найдено.
+        /// </summary>
+        public static string PlaceholderNothingFound {
+            get {
+                return ResourceManager.GetString("PlaceholderNothingFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Плагин нумерации не запущен: при запуске Revit произошла ошибка. Перезапустите Revit; если ошибка повторится, отправьте разработчику журнал из папки %LOCALAPPDATA%\RevitNumbering..
         /// </summary>
         public static string PluginNotStarted {
@@ -124,11 +700,470 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Неверная разрядность {0}: после двоеточия — только нули, от 1 до 9, одинаково во всех номерах шаблона.
+        /// </summary>
+        public static string Problem_BadWidth {
+            get {
+                return ResourceManager.GetString("Problem_BadWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Во встроенных настройках по умолчанию неверная запись категории «{0}».
+        /// </summary>
+        public static string Problem_DefaultsCategoryInvalid {
+            get {
+                return ResourceManager.GetString("Problem_DefaultsCategoryInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Во встроенных настройках по умолчанию нет записи категории «{0}».
+        /// </summary>
+        public static string Problem_DefaultsCategoryMissing {
+            get {
+                return ResourceManager.GetString("Problem_DefaultsCategoryMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Встроенные настройки по умолчанию не читаются.
+        /// </summary>
+        public static string Problem_DefaultsUnreadable {
+            get {
+                return ResourceManager.GetString("Problem_DefaultsUnreadable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Номер {0} получается сразу на нескольких уровнях ({1}) — у них одинаковый код уровня.
+        /// </summary>
+        public static string Problem_DuplicateInScope {
+            get {
+                return ResourceManager.GetString("Problem_DuplicateInScope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to В имени уровня нет выбранной части: {0}.
+        /// </summary>
+        public static string Problem_LevelPartMissing {
+            get {
+                return ResourceManager.GetString("Problem_LevelPartMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to В охвате несколько уровней ({0}), а в шаблоне нет {{Уровень}} — номера на разных уровнях совпадут.
+        /// </summary>
+        public static string Problem_NeedLevel {
+            get {
+                return ResourceManager.GetString("Problem_NeedLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to В шаблоне нет порядкового номера {{N}}.
+        /// </summary>
+        public static string Problem_NoNumber {
+            get {
+                return ResourceManager.GetString("Problem_NoNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Фигурная скобка без пары.
+        /// </summary>
+        public static string Problem_UnclosedBrace {
+            get {
+                return ResourceManager.GetString("Problem_UnclosedBrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Неизвестная подстановка {0}.
+        /// </summary>
+        public static string Problem_UnknownPlaceholder {
+            get {
+                return ResourceManager.GetString("Problem_UnknownPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Номер {0} длиннее разрядности ({1}) — номера будут разной длины.
+        /// </summary>
+        public static string Problem_WidthTooSmall {
+            get {
+                return ResourceManager.GetString("Problem_WidthTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Зафиксирован: {0}.
+        /// </summary>
+        public static string RowStatus_Locked {
+            get {
+                return ResourceManager.GetString("RowStatus_Locked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Без изменений.
+        /// </summary>
+        public static string RowStatus_NoChange {
+            get {
+                return ResourceManager.GetString("RowStatus_NoChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Вне охвата.
+        /// </summary>
+        public static string RowStatus_OutOfScope {
+            get {
+                return ResourceManager.GetString("RowStatus_OutOfScope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Изменится.
+        /// </summary>
+        public static string RowStatus_WillChange {
+            get {
+                return ResourceManager.GetString("RowStatus_WillChange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Элементы, смещённые поперёк ряда не больше допуска, считаются одним рядом. Ориентация — по осям модели: «сверху» — больший Y, «слева» — меньший X..
+        /// </summary>
+        public static string RowToleranceHint {
+            get {
+                return ResourceManager.GetString("RowToleranceHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Охват: выбранные в модели ({0}).
+        /// </summary>
+        public static string ScopePicked {
+            get {
+                return ResourceManager.GetString("ScopePicked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Охват: видимые в таблице ({0}).
+        /// </summary>
+        public static string ScopeVisible {
+            get {
+                return ResourceManager.GetString("ScopeVisible", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Настройки категорий не прочитаны и заменены настройками по умолчанию: {0}.
+        /// </summary>
+        public static string SettingsNotice_CategoriesReset {
+            get {
+                return ResourceManager.GetString("SettingsNotice_CategoriesReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл настроек повреждён или не читается. Загружены настройки по умолчанию, копия файла сохранена: {0}.
+        /// </summary>
+        public static string SettingsNotice_FileCorrupted {
+            get {
+                return ResourceManager.GetString("SettingsNotice_FileCorrupted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Файл настроек создан более новой версией плагина: он прочитан, но сохранение в него отключено.
+        /// </summary>
+        public static string SettingsNotice_NewerSchema {
+            get {
+                return ResourceManager.GetString("SettingsNotice_NewerSchema", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не удалось записать файл: {0}.
+        /// </summary>
+        public static string SettingsNotice_SaveFailed {
+            get {
+                return ResourceManager.GetString("SettingsNotice_SaveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Номера {0} заняты элементами вне охвата или зафиксированными — выданы следующие свободные. Чтобы перенумеровать полностью, выберите охват всего уровня..
+        /// </summary>
+        public static string SkippedHint {
+            get {
+                return ResourceManager.GetString("SkippedHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to и ещё {0}.
+        /// </summary>
+        public static string SkippedMore {
+            get {
+                return ResourceManager.GetString("SkippedMore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} … {1}.
+        /// </summary>
+        public static string SkippedRange {
+            get {
+                return ResourceManager.GetString("SkippedRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Плагин собран с ошибкой и не может работать. Сообщите разработчику:.
+        /// </summary>
+        public static string StartupBlocked {
+            get {
+                return ResourceManager.GetString("StartupBlocked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Запрос отменён.
+        /// </summary>
+        public static string StatusCancelled {
+            get {
+                return ResourceManager.GetString("StatusCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Данные в модели изменились — проверьте новые значения и нажмите «Применить» ещё раз. Ничего не записано..
+        /// </summary>
+        public static string StatusDataChanged {
+            get {
+                return ResourceManager.GetString("StatusDataChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нумерация не выполнена: активный документ сменился.
+        /// </summary>
+        public static string StatusDocumentChanged {
+            get {
+                return ResourceManager.GetString("StatusDocumentChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Конфигурация экспортирована: {0}.
+        /// </summary>
+        public static string StatusExported {
+            get {
+                return ResourceManager.GetString("StatusExported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Загрузка….
+        /// </summary>
+        public static string StatusLoading {
+            get {
+                return ResourceManager.GetString("StatusLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Активен другой документ — нажмите «Обновить», чтобы загрузить его.
+        /// </summary>
+        public static string StatusOtherDocument {
+            get {
+                return ResourceManager.GetString("StatusOtherDocument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Выберите элементы в модели Revit….
+        /// </summary>
+        public static string StatusPicking {
+            get {
+                return ResourceManager.GetString("StatusPicking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revit занят — ожидание.
+        /// </summary>
+        public static string StatusRevitBusy {
+            get {
+                return ResourceManager.GetString("StatusRevitBusy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Конфигурация сохранена.
+        /// </summary>
+        public static string StatusSaved {
+            get {
+                return ResourceManager.GetString("StatusSaved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Данные могли устареть — нажмите «Обновить».
+        /// </summary>
+        public static string StatusStale {
+            get {
+                return ResourceManager.GetString("StatusStale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Записываю элементов: {0}….
+        /// </summary>
+        public static string StatusWriting {
+            get {
+                return ResourceManager.GetString("StatusWriting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Записано: {0}, не записано: {1}.
+        /// </summary>
+        public static string StatusWritten {
+            get {
+                return ResourceManager.GetString("StatusWritten", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}, {1} — {2}.
+        /// </summary>
+        public static string SummaryLine {
+            get {
+                return ResourceManager.GetString("SummaryLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Не записано: {0}.
+        /// </summary>
+        public static string SummaryNotWritten {
+            get {
+                return ResourceManager.GetString("SummaryNotWritten", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нумерация элементов — итог.
+        /// </summary>
+        public static string SummaryTitle {
+            get {
+                return ResourceManager.GetString("SummaryTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Всю нумерацию отменяет одна команда «Отменить» (Ctrl+Z) в Revit..
+        /// </summary>
+        public static string SummaryUndoHint {
+            get {
+                return ResourceManager.GetString("SummaryUndoHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Записано: {0}.
+        /// </summary>
+        public static string SummaryWritten {
+            get {
+                return ResourceManager.GetString("SummaryWritten", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Подстановки: {Уровень} или {Level} — код уровня; {N} — порядковый номер; {N:000} — номер с ведущими нулями (число нулей — разрядность). Остальной текст копируется как есть..
+        /// </summary>
+        public static string TemplateHint {
+            get {
+                return ResourceManager.GetString("TemplateHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Введите целое число от {0} до {1}.
+        /// </summary>
+        public static string ValidationRange {
+            get {
+                return ResourceManager.GetString("ValidationRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Нумерация элементов.
         /// </summary>
         public static string WindowTitle {
             get {
                 return ResourceManager.GetString("WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to элемент удалён.
+        /// </summary>
+        public static string WriteFail_Deleted {
+            get {
+                return ResourceManager.GetString("WriteFail_Deleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to элемент устарел — обновите модель до последней версии.
+        /// </summary>
+        public static string WriteFail_NotUpToDate {
+            get {
+                return ResourceManager.GetString("WriteFail_NotUpToDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to занят пользователем {0}.
+        /// </summary>
+        public static string WriteFail_OwnedByOther {
+            get {
+                return ResourceManager.GetString("WriteFail_OwnedByOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to параметр только для чтения.
+        /// </summary>
+        public static string WriteFail_ReadOnly {
+            get {
+                return ResourceManager.GetString("WriteFail_ReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revit не принял значение.
+        /// </summary>
+        public static string WriteFail_Rejected {
+            get {
+                return ResourceManager.GetString("WriteFail_Rejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Revit отменил изменение: {0}.
+        /// </summary>
+        public static string WriteFail_RolledBack {
+            get {
+                return ResourceManager.GetString("WriteFail_RolledBack", resourceCulture);
             }
         }
     }
