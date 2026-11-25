@@ -23,6 +23,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Defaults of every registered category; the same format as the user settings file -->
+		<EmbeddedResource Include="Settings\defaults.json" LogicalName="RevitNumbering.Core.Settings.defaults.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<InternalsVisibleTo Include="RevitNumbering.Tests" />
 	</ItemGroup>
 </Project>

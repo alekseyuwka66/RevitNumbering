@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "lastCategory": "Doors",
+  "categories": [
+    {
+      "categoryKey": "Walls",
+      "template": "С-{Уровень}-{N:000}",
+      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 1000 }
+    },
+    {
+      "categoryKey": "Doors",
+      "template": "Д-{Уровень}-{N:000}",
+      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 500 }
+    },
+    {
+      "categoryKey": "Windows",
+      "template": "О-{Уровень}-{N:000}",
+      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 500 }
+    },
+    {
+      "categoryKey": "Rooms",
+      "template": "{Уровень}{N:00}",
+      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 3000 }
+    }
+  ]
+}

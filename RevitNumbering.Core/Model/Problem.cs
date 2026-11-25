@@ -43,5 +43,14 @@ namespace RevitNumbering.Core.Model
 
         /// <summary>Warning: the counter does not fit the width. Args: the largest number, the width.</summary>
         WidthTooSmall,
+
+        /// <summary>The embedded defaults cannot be read (a developer error).</summary>
+        DefaultsUnreadable,
+
+        /// <summary>A registered category has no record in the embedded defaults. Args: the category key.</summary>
+        DefaultsCategoryMissing,
+
+        /// <summary>The record of a category in the embedded defaults is invalid. Args: the category key.</summary>
+        DefaultsCategoryInvalid,
     }
 }
