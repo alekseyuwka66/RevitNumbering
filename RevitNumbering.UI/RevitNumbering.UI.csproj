@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- No Revit API here: one build per runtime serves every Revit version of that runtime -->
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<Configurations>Debug;Release;R2022;R2024;R2025;BuildNET48;BuildNET8</Configurations>
+		<Platforms>x64;AnyCPU</Platforms>
+		<IsPackable>false</IsPackable>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+	</PropertyGroup>
+
+	<!-- Custom configurations (R20xx, BuildNET*) are optimized like Release; Debug stays unoptimized -->
+	<PropertyGroup Condition=" '$(Configuration)' != 'Debug' ">
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RevitNumbering.Core\RevitNumbering.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="RevitNumbering.UI.Tests" />
+	</ItemGroup>
+</Project>

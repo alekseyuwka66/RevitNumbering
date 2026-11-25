@@ -18,8 +18,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- The only runtime package of the plugin (ADR-01); no Revit API and no WPF here -->
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<!-- Settings file; no Revit API and no WPF here -->
+		<PackageReference Include="System.Text.Json" Version="8.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>

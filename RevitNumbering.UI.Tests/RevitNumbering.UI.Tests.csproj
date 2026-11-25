@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<Configurations>Debug;Release</Configurations>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<!-- The solution builds the referenced projects as x64 -->
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Test-only packages; never shipped -->
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RevitNumbering.UI\RevitNumbering.UI.csproj" />
+		<ProjectReference Include="..\RevitNumbering.Core\RevitNumbering.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+</Project>
