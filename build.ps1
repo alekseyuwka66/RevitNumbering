@@ -1,5 +1,4 @@
-# Builds all Revit code configurations (R2022, R2024, R2025 via the BuildNET48/BuildNET8
-# meta-configurations) and then packages the combined InstallerWIX MSI.
+# Builds every Revit configuration (R2022, R2024, R2025) and then packages the combined InstallerWIX MSI.
 
 $sln = "$PSScriptRoot\RevitNumbering.sln"
 $installerProj = "$PSScriptRoot\InstallerWIX\InstallerWIX.wixproj"
@@ -19,16 +18,16 @@ if (-not $msbuild) {
     exit 1
 }
 
-# Each meta-configuration recursively rebuilds the real R20xx configs via an
-# AfterTargets="Build" target defined in every code csproj (see RevitStartup.csproj / RevitNumbering.csproj):
-#   BuildNET48 -> R2022;R2024 (net48)
-#   BuildNET8  -> R2025       (net8.0-windows)
-$metaConfigs = @("BuildNET48", "BuildNET8")
+# Each configuration is restored and built by its own MSBuild run: the Revit API package version
+# depends on the configuration, and one run keeps the first restored version for all of them.
+#   R2022, R2024 -> net48
+#   R2025        -> net8.0-windows
+$configs = @("R2022", "R2024", "R2025")
 
 $allOk = $true
-foreach ($cfg in $metaConfigs) {
+foreach ($cfg in $configs) {
     Write-Host "=== Building $cfg (solution) ===" -ForegroundColor Cyan
-    & $msbuild $sln /restore /t:Build /p:Configuration=$cfg /p:Platform=x64
+    & $msbuild $sln /restore /t:Build /p:Configuration=$cfg /p:Platform=x64 /v:minimal /nologo
     if ($LASTEXITCODE -eq 0) {
         Write-Host "OK: $cfg" -ForegroundColor Green
     } else {
@@ -43,7 +42,7 @@ if (-not $allOk) {
 }
 
 Write-Host "=== Building InstallerWIX ===" -ForegroundColor Cyan
-& $msbuild $installerProj /t:Build /p:Configuration=Release /p:Platform=x86
+& $msbuild $installerProj /t:Build /p:Configuration=Release /p:Platform=x86 /v:minimal /nologo
 if ($LASTEXITCODE -eq 0) {
     Write-Host "OK: InstallerWIX" -ForegroundColor Green
     $msi = Get-ChildItem "$PSScriptRoot\InstallerWIX\bin\Release\*.msi" -ErrorAction SilentlyContinue | Select-Object -First 1
