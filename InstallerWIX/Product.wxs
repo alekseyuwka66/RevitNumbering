@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Product Id="*" Name="RevitNumbering" Language="1033" Version="$(var.ProductVersion)" Manufacturer="RevitNumbering" UpgradeCode="{5A542426-065D-41F6-8891-1F6E772DDD75}">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+		<!-- For the current user only, without elevation: everything goes to the user profile -->
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perUser" InstallPrivileges="limited" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
 					  AllowSameVersionUpgrades="yes"

@@ -15,14 +15,16 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
-    <SuppressValidation>True</SuppressValidation>
     <Cultures>ru-RU</Cultures>
+    <!-- ICE61: same-version upgrades are allowed on purpose. ICE91: the package is per-user only. -->
+    <SuppressIces>ICE61;ICE91</SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <SuppressValidation>True</SuppressValidation>
     <Cultures>ru-RU</Cultures>
+    <!-- ICE61: same-version upgrades are allowed on purpose. ICE91: the package is per-user only. -->
+    <SuppressIces>ICE61;ICE91</SuppressIces>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AddinFiles.wxs" />
@@ -33,6 +35,9 @@
     <Compile Include="RevitDetection.wxs" />
     <Compile Include="Settings\RegisterVersion.wxs" />
     <Compile Include="WIX_UI.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="PerUserComponents.xslt" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Components" />
@@ -62,8 +67,8 @@
 		  BasePath2025=..\RevitStartup\bin\x64\R2025\net8.0-windows;
 	  </DefineConstants>
     </PropertyGroup>
-    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2022.wxs" DirectoryRefId="REVIT2022FOLDER" ComponentGroupName="PublishedComponentsRevit2022" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2022\net48" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2022" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
-    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2024.wxs" DirectoryRefId="REVIT2024FOLDER" ComponentGroupName="PublishedComponentsRevit2024" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2024\net48" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2024" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
-    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2025.wxs" DirectoryRefId="REVIT2025FOLDER" ComponentGroupName="PublishedComponentsRevit2025" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2025\net8.0-windows" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2025" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
+    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2022.wxs" DirectoryRefId="REVIT2022FOLDER" ComponentGroupName="PublishedComponentsRevit2022" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2022\net48" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" Transforms="PerUserComponents.xslt" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2022" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
+    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2024.wxs" DirectoryRefId="REVIT2024FOLDER" ComponentGroupName="PublishedComponentsRevit2024" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2024\net48" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" Transforms="PerUserComponents.xslt" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2024" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
+    <HeatDirectory OutputFile="Components\ComponentsGenerationRevit2025.wxs" DirectoryRefId="REVIT2025FOLDER" ComponentGroupName="PublishedComponentsRevit2025" SuppressCom="true" Directory="..\RevitStartup\bin\x64\R2025\net8.0-windows" SuppressFragments="true" SuppressRegistry="true" SuppressRootDirectory="true" AutoGenerateGuids="false" GenerateGuidsNow="true" Transforms="PerUserComponents.xslt" ToolPath="$(WixToolPath)" PreprocessorVariable="var.BasePath2025" RunAsSeparateProcess="$(RunWixToolsOutOfProc)" />
   </Target>
 </Project>

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Fragment>
-		<Component Id="cmpRegisterVersion" Guid="{C1D5837D-75BE-445B-92EA-2AB25F7B98B3}" Directory="TARGETDIR" Win64="yes">
+		<!-- The installed version, and the removal of the shared folders of the user profile when they are empty.
+		     Settings and logs (%LOCALAPPDATA%\RevitNumbering) are not components: uninstalling keeps them. -->
+		<Component Id="cmpRegisterVersion" Guid="{C1D5837D-75BE-445B-92EA-2AB25F7B98B3}" Directory="TARGETDIR">
 			<RegistryKey Root="HKCU"
 						 Key="SOFTWARE\[Manufacturer]\[ProductName]">
 				<RegistryValue Type="string" Name="Version" Value="[ProductVersion]" KeyPath="yes" />
 			</RegistryKey>
+			<RemoveFolder Id="rmAddins" Directory="Addins" On="uninstall" />
+			<RemoveFolder Id="rmRevit" Directory="Revit" On="uninstall" />
+			<RemoveFolder Id="rmAutodesk" Directory="Autodesk" On="uninstall" />
 		</Component>
 	</Fragment>
 </Wix>

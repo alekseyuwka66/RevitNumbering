@@ -2,22 +2,40 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Fragment>
 		<?define DefaultSource = "..\RevitStartup\Manifest\RevitNumbering.addin"?>
+		<?define ComponentsKey = "Software\RevitNumbering\Components"?>
 
+		<!-- The manifest of every Revit version. Everything is installed into the user profile:
+		     the key path is a registry value in HKCU and the folders are listed for removal (ICE38, ICE64). -->
 		<DirectoryRef Id="REVIT2022_ADDIN_FOLDER">
 			<Component Id="cmpAddin2022" Guid="{426BD3D9-7F71-4426-BFEC-047C6DE1CABD}">
-				<File Id="fileAddin2022" KeyPath="yes" Source="$(var.DefaultSource)" />
+				<File Id="fileAddin2022" Source="$(var.DefaultSource)" />
+				<RegistryValue Root="HKCU" Key="$(var.ComponentsKey)" Name="cmpAddin2022" Type="integer" Value="1" KeyPath="yes" />
+				<RemoveFolder Id="rmAddinFolder2022" Directory="REVIT2022_ADDIN_FOLDER" On="uninstall" />
+				<RemoveFolder Id="rmFolder2022" Directory="Folder2022" On="uninstall" />
+				<RemoveFolder Id="rmDll2022" Directory="dll2022" On="uninstall" />
+				<RemoveFolder Id="rmDllFolder2022" Directory="REVIT2022FOLDER" On="uninstall" />
 			</Component>
 		</DirectoryRef>
 
 		<DirectoryRef Id="REVIT2024_ADDIN_FOLDER">
 			<Component Id="cmpAddin2024" Guid="{BE9B014E-DA8E-48AF-A1A0-BC9DAE95A88C}">
-				<File Id="fileAddin2024" KeyPath="yes" Source="$(var.DefaultSource)" />
+				<File Id="fileAddin2024" Source="$(var.DefaultSource)" />
+				<RegistryValue Root="HKCU" Key="$(var.ComponentsKey)" Name="cmpAddin2024" Type="integer" Value="1" KeyPath="yes" />
+				<RemoveFolder Id="rmAddinFolder2024" Directory="REVIT2024_ADDIN_FOLDER" On="uninstall" />
+				<RemoveFolder Id="rmFolder2024" Directory="Folder2024" On="uninstall" />
+				<RemoveFolder Id="rmDll2024" Directory="dll2024" On="uninstall" />
+				<RemoveFolder Id="rmDllFolder2024" Directory="REVIT2024FOLDER" On="uninstall" />
 			</Component>
 		</DirectoryRef>
 
 		<DirectoryRef Id="REVIT2025_ADDIN_FOLDER">
 			<Component Id="cmpAddin2025" Guid="{F4BE9BCA-32B1-4D5B-B885-8ABAD58F2248}">
-				<File Id="fileAddin2025" KeyPath="yes" Source="$(var.DefaultSource)" />
+				<File Id="fileAddin2025" Source="$(var.DefaultSource)" />
+				<RegistryValue Root="HKCU" Key="$(var.ComponentsKey)" Name="cmpAddin2025" Type="integer" Value="1" KeyPath="yes" />
+				<RemoveFolder Id="rmAddinFolder2025" Directory="REVIT2025_ADDIN_FOLDER" On="uninstall" />
+				<RemoveFolder Id="rmFolder2025" Directory="Folder2025" On="uninstall" />
+				<RemoveFolder Id="rmDll2025" Directory="dll2025" On="uninstall" />
+				<RemoveFolder Id="rmDllFolder2025" Directory="REVIT2025FOLDER" On="uninstall" />
 			</Component>
 		</DirectoryRef>
 
