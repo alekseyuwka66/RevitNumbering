@@ -203,29 +203,44 @@ namespace RevitNumbering.Core.Session
         private ApplyResult ReadCompareWrite(DocumentId document, string category, Preview shown,
             IWriteProgress progress)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             CategoryData fresh = _model.Read(document, category);
+            long readMs = watch.ElapsedMilliseconds;
             Preview plan = NumberingCalculator.Calculate(fresh, Scope(fresh), Settings);
-            if (!plan.SameAs(shown))
+            bool same = plan.SameAs(shown);
+            long calculateMs = watch.ElapsedMilliseconds - readMs;
+            if (!same)
             {
-                _log.Warning("[Apply] the model differs from the window, nothing is written");
+                _log.Warning("[Apply] the model differs from the window, nothing is written (read " + readMs
+                    + " ms, calculate " + calculateMs + " ms)");
                 SetData(fresh);
                 return new ApplyResult(ApplyOutcome.DataChanged);
             }
 
             List<WriteItem> items = plan.ToWrite();
+            long writeStartedAt = watch.ElapsedMilliseconds;
             WriteResult written = _model.Write(document, category, items, progress);
+            long writeMs = watch.ElapsedMilliseconds - writeStartedAt;
 
             // After the write, the table shows the real values from the model.
+            long rereadStartedAt = watch.ElapsedMilliseconds;
             SetData(_model.Read(document, category));
+            long rereadMs = watch.ElapsedMilliseconds - rereadStartedAt;
+
+            string timings = "read " + readMs + " ms, calculate " + calculateMs + " ms, write " + writeMs
+                + " ms, reread and update " + rereadMs + " ms; checks " + written.ChecksMs + " ms, transactions "
+                + written.TransactionsMs + " ms in " + written.Batches + " batches (element by element "
+                + written.ElementByElementBatches + "), slowest batch " + written.SlowestBatchMs
+                + " ms, window pauses " + written.ProgressMs + " ms, finish " + written.FinishMs + " ms";
 
             if (written.Cancelled)
             {
-                _log.Info("[Apply] " + category + ": cancelled by the user, rolled back");
+                _log.Info("[Apply] " + category + ": cancelled by the user, rolled back; " + timings);
                 return new ApplyResult(ApplyOutcome.Cancelled);
             }
 
             _log.Info("[Apply] " + category + ": to write " + items.Count + ", written " + written.WrittenCount
-                + ", failed " + written.Failures.Count);
+                + ", failed " + written.Failures.Count + "; " + timings);
             LogFailureDetails(written.Failures);
             return new ApplyResult(ApplyOutcome.Written, written);
         }
@@ -333,7 +348,9 @@ namespace RevitNumbering.Core.Session
                 return;
             }
 
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             CategoryData data = _model.Read(active.Id, CategoryKey);
+            long readMs = watch.ElapsedMilliseconds;
             if (!active.Id.Equals(WindowDocument.Id))
             {
                 // Picks belong to the previous document.
@@ -343,7 +360,8 @@ namespace RevitNumbering.Core.Session
             WindowDocument = active;
             DataMayBeStale = false;
             SetData(data);
-            _log.Info("[Load] " + CategoryKey + ": " + data.Items.Count + " elements");
+            _log.Info("[Load] " + CategoryKey + ": " + data.Items.Count + " elements, read " + readMs
+                + " ms, data handlers " + (watch.ElapsedMilliseconds - readMs) + " ms");
         }
 
         private void ClearData()

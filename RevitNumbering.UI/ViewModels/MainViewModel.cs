@@ -498,6 +498,7 @@ namespace RevitNumbering.UI.ViewModels
                 return;
             }
 
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             var levelNames = new Dictionary<long, string>();
             foreach (LevelInfo level in data.Levels)
             {
@@ -539,7 +540,9 @@ namespace RevitNumbering.UI.ViewModels
                 visibleIds = new HashSet<long>();
             }
 
+            long preparedMs = watch.ElapsedMilliseconds;
             _session.Recalculate(visibleIds);
+            long calculatedMs = watch.ElapsedMilliseconds - preparedMs;
 
             Preview preview = _session.Preview;
             var holderIds = new HashSet<long>(preview.Skipped.Select(skipped => skipped.OccupiedById));
@@ -554,6 +557,14 @@ namespace RevitNumbering.UI.ViewModels
             _rows = visible;
             Settings.ShowProblems(preview);
             RefreshState();
+
+            long rebuiltMs = watch.ElapsedMilliseconds;
+            int shown = visible.Count;
+            int total = all.Count;
+            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() =>
+                _log.Info("[Rows] " + shown + " of " + total + ": prepare " + preparedMs + " ms, calculate "
+                    + calculatedMs + " ms, bindings " + (rebuiltMs - preparedMs - calculatedMs)
+                    + " ms, drawn after " + watch.ElapsedMilliseconds + " ms")));
         }
 
         // Every property is computed from the session, so refresh all bindings at once.

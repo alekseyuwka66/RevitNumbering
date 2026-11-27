@@ -15,6 +15,21 @@ namespace RevitNumbering.Core.Contracts
         public bool Cancelled { get; set; }
 
         public List<WriteFailure> Failures { get; set; } = new List<WriteFailure>();
+
+        // Timings of the write for the log, in milliseconds.
+        public long ChecksMs { get; set; }
+
+        public long TransactionsMs { get; set; }
+
+        public long ProgressMs { get; set; }
+
+        public long FinishMs { get; set; }
+
+        public long SlowestBatchMs { get; set; }
+
+        public int Batches { get; set; }
+
+        public int ElementByElementBatches { get; set; }
     }
 
     public sealed class WriteFailure

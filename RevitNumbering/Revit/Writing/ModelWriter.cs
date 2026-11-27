@@ -42,6 +42,7 @@ namespace RevitNumbering.Revit.Writing
                 }
             }
 
+            result.ChecksMs = watch.ElapsedMilliseconds;
             long lastProgressAt = watch.ElapsedMilliseconds;
             if (checkedItems.Count > 0)
             {
@@ -53,7 +54,16 @@ namespace RevitNumbering.Revit.Writing
                         List<KeyValuePair<Parameter, WriteItem>> batch =
                             checkedItems.GetRange(start, Math.Min(BatchSize, checkedItems.Count - start));
 
-                        WriteBatch(document, category, batch, result);
+                        long batchStartedAt = watch.ElapsedMilliseconds;
+                        bool elementByElement = WriteBatch(document, category, batch, result);
+                        long batchMs = watch.ElapsedMilliseconds - batchStartedAt;
+                        result.TransactionsMs += batchMs;
+                        result.SlowestBatchMs = Math.Max(result.SlowestBatchMs, batchMs);
+                        result.Batches++;
+                        if (elementByElement)
+                        {
+                            result.ElementByElementBatches++;
+                        }
 
                         int done = start + batch.Count;
                         // The window redraws and reads Cancel not after every batch, but at most once per ProgressIntervalMs.
@@ -61,17 +71,25 @@ namespace RevitNumbering.Revit.Writing
                         if (progress != null && done < checkedItems.Count
                             && watch.ElapsedMilliseconds - lastProgressAt >= ProgressIntervalMs)
                         {
+                            long pausedAt = watch.ElapsedMilliseconds;
                             goOn = progress.Continue(done, checkedItems.Count);
                             lastProgressAt = watch.ElapsedMilliseconds;
+                            result.ProgressMs += lastProgressAt - pausedAt;
                         }
 
                         if (!goOn)
                         {
+                            long rollBackStartedAt = watch.ElapsedMilliseconds;
                             group.RollBack();
-                            return new WriteResult { Cancelled = true };
+                            result.FinishMs = watch.ElapsedMilliseconds - rollBackStartedAt;
+                            result.Cancelled = true;
+                            result.WrittenCount = 0;
+                            result.Failures.Clear();
+                            return result;
                         }
                     }
 
+                    long finishStartedAt = watch.ElapsedMilliseconds;
                     if (result.WrittenCount > 0)
                     {
                         group.Assimilate();
@@ -80,6 +98,8 @@ namespace RevitNumbering.Revit.Writing
                     {
                         group.RollBack();
                     }
+
+                    result.FinishMs = watch.ElapsedMilliseconds - finishStartedAt;
                 }
             }
 
@@ -88,7 +108,8 @@ namespace RevitNumbering.Revit.Writing
 
         // The fast path: the whole batch in one transaction. If the commit fails (an updater error,
         // a model failure), the batch is written element by element, so only the bad elements are lost.
-        private static void WriteBatch(Document document, RevitCategory category,
+        // Returns true when the batch was written element by element.
+        private static bool WriteBatch(Document document, RevitCategory category,
             List<KeyValuePair<Parameter, WriteItem>> batch, WriteResult result)
         {
             var rejected = new List<WriteFailure>();
@@ -96,7 +117,7 @@ namespace RevitNumbering.Revit.Writing
             {
                 result.WrittenCount += batch.Count - rejected.Count;
                 result.Failures.AddRange(rejected);
-                return;
+                return false;
             }
 
             foreach (KeyValuePair<Parameter, WriteItem> pair in batch)
@@ -118,6 +139,8 @@ namespace RevitNumbering.Revit.Writing
                     result.Failures.Add(failure);
                 }
             }
+
+            return true;
         }
 
         // One transaction for the batch. rejected gets the elements that Revit refused.
