@@ -5,7 +5,7 @@ namespace RevitNumbering.Tests.Orderings
 {
     public class GridOrderingTests
     {
-        /// <summary>Doors A…I in reading order (A B C / D E F / G H I); rows and columns are slightly uneven.</summary>
+        // Doors A..I in reading order (A B C / D E F / G H I). Rows and columns are slightly uneven.
         private static List<NumberingItem> Doors3x3()
         {
             return new List<NumberingItem>

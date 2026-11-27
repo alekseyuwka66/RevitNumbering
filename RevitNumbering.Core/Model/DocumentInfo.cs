@@ -1,6 +1,6 @@
 namespace RevitNumbering.Core.Model
 {
-    /// <summary>Opaque number of an open document, issued by the Revit layer. Compared by value.</summary>
+    // Opaque number of an open document, given by the Revit layer. Compared by value.
     public sealed class DocumentId : IEquatable<DocumentId>
     {
         public DocumentId(int value)
@@ -31,6 +31,12 @@ namespace RevitNumbering.Core.Model
         }
     }
 
+    public enum HistoryChange
+    {
+        Undone,
+        Redone,
+    }
+
     public enum DocumentKind
     {
         None,
@@ -40,11 +46,9 @@ namespace RevitNumbering.Core.Model
 
     public sealed class DocumentInfo
     {
-        /// <summary>null when Kind is None.</summary>
+        // Null when Kind is None.
         public DocumentId Id { get; set; }
 
         public DocumentKind Kind { get; set; }
-
-        public string Title { get; set; }
     }
 }

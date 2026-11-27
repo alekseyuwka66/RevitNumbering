@@ -1,56 +1,28 @@
 namespace RevitNumbering.Core.Model
 {
-    /// <summary>An expected problem as a code with arguments; the text is built by the UI.</summary>
-    public sealed class Problem
+    public enum ProblemKind
     {
-        public Problem()
-        {
-        }
-
-        public Problem(ProblemCode code, params string[] args)
-        {
-            Code = code;
-            Args = args.ToList();
-        }
-
-        public ProblemCode Code { get; set; }
-
-        public List<string> Args { get; set; } = new List<string>();
-    }
-
-    public enum ProblemCode
-    {
-        /// <summary>A brace without its pair.</summary>
-        UnclosedBrace,
-
-        /// <summary>Args: the placeholder as written.</summary>
-        UnknownPlaceholder,
-
-        /// <summary>The template has no {N}.</summary>
-        NoNumber,
-
-        /// <summary>Args: the placeholder as written.</summary>
-        BadWidth,
-
-        /// <summary>No level placeholder while the scope has several levels. Args: level names ("" for no level).</summary>
+        // The scope has several levels, but the level is not part of the number.
         NeedLevel,
 
-        /// <summary>Level names have no requested part. Args: level names.</summary>
-        LevelPartMissing,
+        // The same number is given on several levels.
+        DuplicateNumber,
+    }
 
-        /// <summary>The same number is given twice inside the scope. Args: the number, then level names ("" for no level).</summary>
-        DuplicateInScope,
+    // A problem that blocks Apply. The UI builds the text. A level name "" means "no level".
+    public sealed class Problem
+    {
+        public Problem(ProblemKind kind, string text = "", List<string> levels = null)
+        {
+            Kind = kind;
+            Text = text;
+            Levels = levels ?? new List<string>();
+        }
 
-        /// <summary>Warning: the counter does not fit the width. Args: the largest number, the width.</summary>
-        WidthTooSmall,
+        public ProblemKind Kind { get; }
 
-        /// <summary>The embedded defaults cannot be read (a developer error).</summary>
-        DefaultsUnreadable,
+        public string Text { get; }
 
-        /// <summary>A registered category has no record in the embedded defaults. Args: the category key.</summary>
-        DefaultsCategoryMissing,
-
-        /// <summary>The record of a category in the embedded defaults is invalid. Args: the category key.</summary>
-        DefaultsCategoryInvalid,
+        public List<string> Levels { get; }
     }
 }

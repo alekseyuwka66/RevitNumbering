@@ -3,28 +3,27 @@ using RevitNumbering.Core.Model;
 
 namespace RevitNumbering.Core.Orderings
 {
-    /// <summary>
-    /// A strategy of ordering elements inside one level. The settings object is the implementation:
-    /// its properties are the parameters stored in the settings file.
-    /// A new strategy = a class + one JsonDerivedType line here.
-    /// </summary>
+    // How elements are ordered inside one level. The settings object is the strategy itself:
+    // its properties are the parameters saved in the settings file.
+    // A new strategy needs: a class, a JsonDerivedType line here, an editor DataTemplate in
+    // CategorySettingsPanel.xaml, and an "Ordering_" text with its name in Texts.resx.
     [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
     [JsonDerivedType(typeof(GridOrdering), "Grid")]
     public abstract class Ordering
     {
-        /// <summary>Whether the element has the data the strategy needs.</summary>
+        // Whether the element has the data this strategy needs.
         public virtual bool CanOrder(NumberingItem item)
         {
             return true;
         }
 
-        /// <summary>Whether the parameters are within their limits.</summary>
+        // Whether the parameters are inside their limits.
         public virtual bool IsValid()
         {
             return true;
         }
 
-        /// <summary>Gets only the elements accepted by CanOrder; returns the same elements in numbering order.</summary>
+        // Gets only elements that CanOrder accepts. Returns the same elements in numbering order.
         public abstract List<NumberingItem> Order(List<NumberingItem> items);
     }
 }

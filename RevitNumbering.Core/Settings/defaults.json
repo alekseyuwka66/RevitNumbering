@@ -1,29 +1,44 @@
 {
-  "schemaVersion": 1,
   "lastCategory": "Doors",
   "categories": [
     {
       "categoryKey": "Walls",
-      "template": "С-{Уровень}-{N:000}",
-      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "prefix": "С-",
+      "includeLevel": true,
+      "levelFirst": true,
+      "separator": "-",
+      "width": 3,
+      "suffix": "",
       "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 1000 }
     },
     {
       "categoryKey": "Doors",
-      "template": "Д-{Уровень}-{N:000}",
-      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "prefix": "Д-",
+      "includeLevel": true,
+      "levelFirst": true,
+      "separator": "-",
+      "width": 3,
+      "suffix": "",
       "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 500 }
     },
     {
       "categoryKey": "Windows",
-      "template": "О-{Уровень}-{N:000}",
-      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "prefix": "О-",
+      "includeLevel": true,
+      "levelFirst": true,
+      "separator": "-",
+      "width": 3,
+      "suffix": "",
       "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 500 }
     },
     {
       "categoryKey": "Rooms",
-      "template": "{Уровень}{N:00}",
-      "levelCode": { "part": "Whole", "wordNumber": 1 },
+      "prefix": "",
+      "includeLevel": true,
+      "levelFirst": true,
+      "separator": "",
+      "width": 2,
+      "suffix": "",
       "ordering": { "type": "Grid", "start": "TopLeft", "byColumns": false, "rowToleranceMm": 3000 }
     }
   ]

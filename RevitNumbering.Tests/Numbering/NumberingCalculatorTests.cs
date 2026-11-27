@@ -1,7 +1,6 @@
 using RevitNumbering.Core.Contracts;
 using RevitNumbering.Core.Model;
 using RevitNumbering.Core.Numbering;
-using RevitNumbering.Core.Templates;
 
 namespace RevitNumbering.Tests.Numbering
 {
@@ -9,7 +8,7 @@ namespace RevitNumbering.Tests.Numbering
     {
         private static readonly List<LevelInfo> TwoLevels = new List<LevelInfo>
         {
-            // Given not in elevation order on purpose.
+            // Not in elevation order on purpose.
             Make.Level(20, "02", 3000),
             Make.Level(10, "01", 0),
         };
@@ -35,7 +34,7 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(4, 10, 0, 0),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
+            Preview preview = Make.Calculate(items, TwoLevels);
 
             Assert.Empty(preview.Errors);
             Assert.Equal("Д-01-001", NewValue(preview, 4));
@@ -56,11 +55,11 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(3, 10, 0, 0),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels, Make.Settings("Д-{N:000}")));
+            Preview preview = Make.Calculate(items, TwoLevels, Make.Settings(includeLevel: false));
 
             Problem problem = Assert.Single(preview.Errors);
-            Assert.Equal(ProblemCode.NeedLevel, problem.Code);
-            Assert.Equal(new[] { "01", "02", "" }, problem.Args);
+            Assert.Equal(ProblemKind.NeedLevel, problem.Kind);
+            Assert.Equal(new[] { "01", "02", "" }, problem.Levels);
             Assert.All(preview.Rows, row => Assert.Equal("", row.NewValue));
             Assert.False(preview.CanApply);
         }
@@ -70,7 +69,7 @@ namespace RevitNumbering.Tests.Numbering
         {
             var items = new List<NumberingItem> { Make.Item(1, 10, 0, 0), Make.Item(2, 10, 1000, 0) };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels, Make.Settings("Д-{N:000}")));
+            Preview preview = Make.Calculate(items, TwoLevels, Make.Settings(includeLevel: false));
 
             Assert.Empty(preview.Errors);
             Assert.Equal("Д-001", NewValue(preview, 1));
@@ -86,7 +85,7 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(2, 10, 0, 0),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
+            Preview preview = Make.Calculate(items, TwoLevels);
 
             Assert.Equal(RowStatus.Locked, Row(preview, 1).Status);
             Assert.Equal(LockReason.NoLevel, Row(preview, 1).Lock);
@@ -105,8 +104,7 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(9, 10, 5000, 0, " Д-01-001 "),
             };
 
-            Preview preview = NumberingCalculator.Calculate(
-                Make.Request(items, TwoLevels, scope: new long[] { 1, 2 }));
+            Preview preview = Make.Calculate(items, TwoLevels, scope: new long[] { 1, 2 });
 
             Assert.Equal("Д-01-002", NewValue(preview, 1));
             Assert.Equal("Д-01-003", NewValue(preview, 2));
@@ -128,32 +126,34 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(3, 10, 2000, 0),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
+            Preview preview = Make.Calculate(items, TwoLevels);
 
             Assert.Equal("Д-01-001", NewValue(preview, 1));
             Assert.Equal("Д-01-003", NewValue(preview, 3));
             Assert.Equal(RowStatus.Locked, Row(preview, 2).Status);
             Assert.Equal(LockReason.OwnedByOther, Row(preview, 2).Lock);
             Assert.Equal("", NewValue(preview, 2));
-            Assert.Equal(2, Assert.Single(preview.Skipped).OccupiedById);
+            SkippedNumber skipped = Assert.Single(preview.Skipped);
+            Assert.Equal("Д-01-002", skipped.Value);
+            Assert.Equal(2, skipped.OccupiedById);
         }
 
         [Fact]
         public void OccupiedNumbers_AreSearchedInsideTheConflictGroup()
         {
-            // Rooms: a number is occupied only for rooms of the same phase.
+            // Rooms: a number is used only by rooms of the same phase.
             var holder = Make.Item(9, 10, 9000, 0, "0101");
             holder.ConflictGroup = "phase A";
             var samePhase = Make.Item(1, 10, 0, 0);
             samePhase.ConflictGroup = "phase A";
             var otherPhase = Make.Item(2, 10, 0, 0);
             otherPhase.ConflictGroup = "phase B";
-            var settings = Make.Settings("{Уровень}{N:00}");
+            var settings = Make.Settings(prefix: "", separator: "", width: 2);
 
-            Preview same = NumberingCalculator.Calculate(Make.Request(
-                new List<NumberingItem> { holder, samePhase }, TwoLevels, settings, new long[] { 1 }));
-            Preview other = NumberingCalculator.Calculate(Make.Request(
-                new List<NumberingItem> { holder, otherPhase }, TwoLevels, settings, new long[] { 2 }));
+            Preview same = Make.Calculate(
+                new List<NumberingItem> { holder, samePhase }, TwoLevels, settings, new long[] { 1 });
+            Preview other = Make.Calculate(
+                new List<NumberingItem> { holder, otherPhase }, TwoLevels, settings, new long[] { 2 });
 
             Assert.Equal("0102", NewValue(same, 1));
             Assert.Single(same.Skipped);
@@ -161,39 +161,21 @@ namespace RevitNumbering.Tests.Numbering
             Assert.Empty(other.Skipped);
         }
 
-        [Fact]
-        public void LevelNameWithoutRequestedPart_LevelPartMissing()
-        {
-            var levels = new List<LevelInfo> { Make.Level(10, "01 этаж", 0), Make.Level(20, "Кровля", 3000) };
-            var items = new List<NumberingItem> { Make.Item(1, 10, 0, 0), Make.Item(2, 20, 0, 0) };
-
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, levels,
-                Make.Settings(part: LevelCodePart.Word, wordNumber: 2)));
-
-            Problem problem = Assert.Single(preview.Errors);
-            Assert.Equal(ProblemCode.LevelPartMissing, problem.Code);
-            Assert.Equal(new[] { "Кровля" }, problem.Args);
-            Assert.All(preview.Rows, row => Assert.Equal("", row.NewValue));
-        }
 
         [Fact]
-        public void EqualLevelCodes_DuplicateInScope()
+        public void LevelNameRunningIntoTheNumber_DuplicateNumber()
         {
-            var levels = new List<LevelInfo> { Make.Level(10, "01 этаж", 0), Make.Level(20, "01 антресоль", 1500) };
-            var items = new List<NumberingItem>
-            {
-                Make.Item(1, 10, 0, 0),
-                Make.Item(2, 10, 1000, 0),
-                Make.Item(3, 20, 0, 0),
-                Make.Item(4, 20, 1000, 0),
-            };
+            // "1" + "11" and "11" + "1" give the same "111".
+            var levels = new List<LevelInfo> { Make.Level(10, "1", 0), Make.Level(20, "11", 3000) };
+            List<NumberingItem> items = Enumerable.Range(1, 11).Select(i => Make.Item(i, 10, i * 1000, 0)).ToList();
+            items.Add(Make.Item(100, 20, 0, 0));
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, levels,
-                Make.Settings(part: LevelCodePart.Word, wordNumber: 1)));
+            Preview preview = Make.Calculate(items, levels, Make.Settings(prefix: "", separator: "", width: 1));
 
             Problem problem = Assert.Single(preview.Errors);
-            Assert.Equal(ProblemCode.DuplicateInScope, problem.Code);
-            Assert.Equal(new[] { "Д-01-001", "01 этаж", "01 антресоль" }, problem.Args);
+            Assert.Equal(ProblemKind.DuplicateNumber, problem.Kind);
+            Assert.Equal("111", problem.Text);
+            Assert.Equal(new[] { "1", "11" }, problem.Levels);
             Assert.False(preview.CanApply);
         }
 
@@ -206,7 +188,7 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(2, 10, 1000, 0, "old"),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
+            Preview preview = Make.Calculate(items, TwoLevels);
 
             Assert.Equal(RowStatus.NoChange, Row(preview, 1).Status);
             Assert.Equal(RowStatus.WillChange, Row(preview, 2).Status);
@@ -225,42 +207,11 @@ namespace RevitNumbering.Tests.Numbering
                 Make.Item(2, 10, 0, 0),
             };
 
-            Preview preview = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
+            Preview preview = Make.Calculate(items, TwoLevels);
 
             Assert.Equal(RowStatus.Locked, Row(preview, 1).Status);
             Assert.Equal(LockReason.NotOrderable, Row(preview, 1).Lock);
             Assert.Equal("Д-01-002", NewValue(preview, 2));
-        }
-
-        [Fact]
-        public void TemplateError_LeavesEveryNewValueEmpty()
-        {
-            var items = new List<NumberingItem> { Make.Item(1, 10, 0, 0), Make.Item(2, 10, 1000, 0) };
-
-            Preview preview = NumberingCalculator.Calculate(
-                Make.Request(items, TwoLevels, Make.Settings("Д-{Уровнь}-{N}"), new long[] { 1 }));
-
-            Assert.Equal(ProblemCode.UnknownPlaceholder, Assert.Single(preview.Errors).Code);
-            Assert.All(preview.Rows, row => Assert.Equal("", row.NewValue));
-            Assert.Equal(RowStatus.OutOfScope, Row(preview, 2).Status);
-            Assert.Equal(0, preview.ChangeCount);
-            Assert.False(preview.CanApply);
-        }
-
-        [Fact]
-        public void RepeatedCalculation_GivesTheSameResult()
-        {
-            List<NumberingItem> items = Enumerable.Range(1, 200)
-                .Select(i => Make.Item(i, i % 2 == 0 ? 10 : 20, (i * 7919) % 5000, (i * 104729) % 9000))
-                .ToList();
-
-            Preview first = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
-            Preview second = NumberingCalculator.Calculate(Make.Request(items, TwoLevels));
-
-            Assert.True(first.SameAs(second));
-            Assert.Equal(
-                first.Rows.Select(row => row.NewValue),
-                second.Rows.Select(row => row.NewValue));
         }
 
         [Fact]
@@ -280,14 +231,13 @@ namespace RevitNumbering.Tests.Numbering
 
             Preview Calculate(string outsideValue, LockReason lockOfSecond)
             {
-                return NumberingCalculator.Calculate(
-                    Make.Request(Items(outsideValue, lockOfSecond), TwoLevels, scope: new long[] { 1, 2 }));
+                return Make.Calculate(Items(outsideValue, lockOfSecond), TwoLevels, scope: new long[] { 1, 2 });
             }
 
             Preview shown = Calculate("", LockReason.None);
 
             Assert.True(shown.SameAs(Calculate("", LockReason.None)));
-            // An element outside the scope took a number: new values moved.
+            // An element outside the scope took a number: the new values moved.
             Assert.False(shown.SameAs(Calculate("Д-01-001", LockReason.None)));
             // An element became locked: the status changed.
             Assert.False(shown.SameAs(Calculate("", LockReason.ReadOnly)));

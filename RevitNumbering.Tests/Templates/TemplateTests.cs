@@ -1,85 +1,69 @@
-using RevitNumbering.Core.Model;
+using RevitNumbering.Core.Settings;
 using RevitNumbering.Core.Templates;
 
 namespace RevitNumbering.Tests.Templates
 {
     public class TemplateTests
     {
-        private static ProblemCode[] Codes(string text)
+        [Fact]
+        public void LevelFirst_PrefixLevelSeparatorCounterSuffix()
         {
-            TemplateResult result = Template.Parse(text);
-            Assert.Null(result.Template);
-            return result.Problems.Select(problem => problem.Code).ToArray();
+            Template template = Template.From(Make.Settings(suffix: "/А"));
+
+            Assert.True(template.HasLevel);
+            Assert.Equal(3, template.Width);
+            Assert.Equal("Д-01-007/А", template.Format("01", 7));
         }
 
         [Fact]
-        public void ValidTemplate_FormatsPrefixLevelAndNumber()
+        public void CounterFirst_SwapsLevelAndCounter()
         {
-            TemplateResult result = Template.Parse("Д-{Уровень}-{N:000}");
+            Template template = Template.From(Make.Settings(levelFirst: false, suffix: "/А"));
 
-            Assert.Empty(result.Problems);
-            Assert.True(result.Template.HasLevel);
-            Assert.True(result.Template.HasNumber);
-            Assert.Equal(3, result.Template.Width);
-            Assert.Equal("Д-01-007", result.Template.Format("01", 7));
+            Assert.Equal("Д-007-01/А", template.Format("01", 7));
         }
 
         [Fact]
-        public void LevelPlaceholder_HasRussianAndEnglishNames()
+        public void WithoutLevel_SeparatorAndOrderAreNotUsed()
         {
-            Assert.Equal("A-02-5", Template.Parse("A-{Level}-{N}").Template.Format("02", 5));
-            Assert.Equal("A-02-5", Template.Parse("A-{Уровень}-{N}").Template.Format("02", 5));
+            foreach (bool levelFirst in new[] { true, false })
+            {
+                Template template = Template.From(Make.Settings(includeLevel: false, levelFirst: levelFirst));
+
+                Assert.False(template.HasLevel);
+                Assert.Equal("Д-007", template.Format("01", 7));
+            }
         }
 
         [Fact]
-        public void Width_IsTheNumberOfZeros_AndNeverCutsTheNumber()
+        public void Width_IsTheNumberOfDigits_AndNeverCutsTheNumber()
         {
-            Template plain = Template.Parse("{N}").Template;
-            Template two = Template.Parse("{N:00}").Template;
+            Template one = Template.From(Make.Settings(prefix: "", includeLevel: false, width: 1));
+            Template two = Template.From(Make.Settings(prefix: "", includeLevel: false, width: 2));
 
-            Assert.Equal(0, plain.Width);
-            Assert.False(plain.HasLevel);
-            Assert.Equal("12", plain.Format(null, 12));
-            Assert.Equal(2, two.Width);
+            Assert.Equal("12", one.Format(null, 12));
+            Assert.Equal("7", one.Format(null, 7));
             Assert.Equal("07", two.Format(null, 7));
             Assert.Equal("150", two.Format(null, 150));
         }
 
         [Theory]
-        [InlineData("Д-{N")]
-        [InlineData("Д-N}")]
-        [InlineData("Д-{Уровень-{N}")]
-        public void UnclosedBrace(string text)
+        [InlineData(0, false)]
+        [InlineData(1, true)]
+        [InlineData(9, true)]
+        [InlineData(10, false)]
+        public void Width_MustBeFromOneToNine(int width, bool valid)
         {
-            Assert.Equal(new[] { ProblemCode.UnclosedBrace }, Codes(text));
+            Assert.Equal(valid, Make.Settings(width: width).IsValid());
         }
 
         [Fact]
-        public void UnknownPlaceholder_ReportsItsText()
+        public void TextPartsMustBeSet()
         {
-            TemplateResult result = Template.Parse("Д-{Уровнь}-{N}");
+            CategorySettings settings = Make.Settings();
+            settings.Prefix = null;
 
-            Problem problem = Assert.Single(result.Problems);
-            Assert.Equal(ProblemCode.UnknownPlaceholder, problem.Code);
-            Assert.Equal(new[] { "{Уровнь}" }, problem.Args);
-        }
-
-        [Theory]
-        [InlineData("Д-{Уровень}")]
-        [InlineData("")]
-        public void NoNumber(string text)
-        {
-            Assert.Equal(new[] { ProblemCode.NoNumber }, Codes(text));
-        }
-
-        [Theory]
-        [InlineData("{N:abc}")]
-        [InlineData("{N:}")]
-        [InlineData("{N:0000000000}")]
-        [InlineData("{N}-{N:00}")]
-        public void BadWidth(string text)
-        {
-            Assert.Equal(new[] { ProblemCode.BadWidth }, Codes(text));
+            Assert.False(settings.IsValid());
         }
     }
 }

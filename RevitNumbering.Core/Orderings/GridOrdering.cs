@@ -10,23 +10,20 @@ namespace RevitNumbering.Core.Orderings
         BottomRight,
     }
 
-    /// <summary>
-    /// Traversal by rows or by columns starting from one of four corners: 8 variants.
-    /// Orientation follows the model axes: right is +X, up is +Y; the active view does not matter.
-    /// </summary>
+    // Goes by rows or by columns from one of four corners: 8 variants. Directions follow the model axes
+    // (right is +X, up is +Y), not the active view.
     public sealed class GridOrdering : Ordering
     {
         public const int MaxRowToleranceMm = 100000;
 
-        /// <summary>Coordinates closer than this are equal, then the id decides.</summary>
+        // Coordinates closer than this are equal. Then the id decides.
         private const double CoordEpsMm = 1;
 
         public Corner Start { get; set; } = Corner.TopLeft;
 
-        /// <summary>false: by rows.</summary>
         public bool ByColumns { get; set; }
 
-        /// <summary>Elements whose coordinates across the row (column) differ by no more than this make one row (column).</summary>
+        // Elements whose coordinates across the row differ by no more than this are in one row (or column).
         public int RowToleranceMm { get; set; } = 500;
 
         public override bool CanOrder(NumberingItem item)
@@ -41,7 +38,7 @@ namespace RevitNumbering.Core.Orderings
 
         public override List<NumberingItem> Order(List<NumberingItem> items)
         {
-            // Signs turn the chosen corner into "the smallest coordinates first".
+            // The signs turn the chosen corner into "smallest coordinates first".
             double signX = Start == Corner.TopRight || Start == Corner.BottomRight ? -1 : 1;
             double signY = Start == Corner.TopLeft || Start == Corner.TopRight ? -1 : 1;
 
@@ -59,7 +56,7 @@ namespace RevitNumbering.Core.Orderings
             int rowStart = 0;
             while (rowStart < keys.Count)
             {
-                // A row is anchored to its first element, not to the previous one.
+                // A row is measured from its first element, not from the previous one.
                 int rowEnd = rowStart + 1;
                 while (rowEnd < keys.Count && keys[rowEnd].Across - keys[rowStart].Across <= RowToleranceMm)
                 {
@@ -75,7 +72,7 @@ namespace RevitNumbering.Core.Orderings
             return result;
         }
 
-        /// <summary>Elements of a row whose positions along it are closer than 1 mm go by id.</summary>
+        // Elements of a row that are less than 1 mm apart along the row go by id.
         private static void AddRow(List<SortKey> row, List<NumberingItem> result)
         {
             int groupStart = 0;
@@ -103,10 +100,10 @@ namespace RevitNumbering.Core.Orderings
                 Item = item;
             }
 
-            /// <summary>Coordinate across the row: rows (columns) are joined by it.</summary>
+            // Coordinate across the row. It joins elements into rows (or columns).
             public double Across { get; }
 
-            /// <summary>Coordinate along the row: the order inside a row (column).</summary>
+            // Coordinate along the row. It sets the order inside a row (or column).
             public double Along { get; }
 
             public NumberingItem Item { get; }
