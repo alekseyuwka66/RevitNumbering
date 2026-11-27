@@ -15,17 +15,16 @@ using RevitNumbering.UI.Views;
 
 namespace RevitNumbering
 {
-    /// <summary>
-    /// Composition root: builds the objects of the plugin in OnStartup and keeps them until OnShutdown.
-    /// The only place that knows the list of categories.
-    /// </summary>
+    // Composition root and the entry points called by Revit: start, the ribbon command, shutdown.
+    // OnStartup builds the objects, and they live until OnShutdown. It is the only place that knows
+    // the list of categories. No entry point lets an exception reach Revit.
     public static class PluginEntry
     {
         private const string DataFolderName = "RevitNumbering";
         private const string LogFolderName = "Logs";
         private const string SettingsFileName = "settings.json";
 
-        private static ILog _log;
+        private static FileLog _log;
         private static bool _isStarted;
         private static string _settingsPath;
         private static RevitDocuments _documents;
@@ -35,18 +34,16 @@ namespace RevitNumbering
 
         public static void Initialize(UIControlledApplication application)
         {
-            // Settings and logs of one Revit version: %LOCALAPPDATA%\RevitNumbering\<version>\
-            string version = application.ControlledApplication.VersionNumber;
-            string dataFolder = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DataFolderName, version);
-            var log = new FileLog(Path.Combine(dataFolder, LogFolderName));
-            _log = log;
+            // Settings and logs are per Revit version: %LOCALAPPDATA%\RevitNumbering\<version>\
+            string dataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                DataFolderName, application.ControlledApplication.VersionNumber);
+            _log = new FileLog(Path.Combine(dataFolder, LogFolderName));
 
-            SafeRunner.Run(log, "Startup", () =>
+            try
             {
-                log.DeleteOldFiles();
+                _log.DeleteOldFiles();
 
-                // Categories: a new category = one line here. The order is the order in the window.
+                // A new category is one line here. The order is the order in the window.
                 var categories = new List<RevitCategory>
                 {
                     new WallsCategory(),
@@ -55,23 +52,28 @@ namespace RevitNumbering
                     new RoomsCategory(),
                 };
 
-                _settingsPath = Path.Combine(dataFolder, SettingsFileName);
-                _documents = new RevitDocuments(application, log);
-                _documents.ApplicationClosing += CloseWindowWithoutQuestion;
+                // Before subscribing to Revit: every category needs a record in the embedded defaults.
+                SettingsStore.CheckDefaults(categories.Select(category => category.Key).ToList());
 
-                // ExternalEvent is created here, in the OnStartup context.
-                _runner = new RevitRunner { BeforeAction = _documents.Refresh };
-                _runner.Initialize();
-                _model = new RevitModel(categories, _documents, _runner, log);
+                _settingsPath = Path.Combine(dataFolder, SettingsFileName);
+                _documents = new RevitDocuments(application, _log, Texts.TransactionName);
+                _documents.ApplicationClosing += CloseWindow;
+
+                // ExternalEvent must be created here, in the OnStartup context.
+                _runner = new RevitRunner(_documents, _log);
+                _model = new RevitModel(categories, _documents);
 
                 _isStarted = true;
-                log.Info("[Startup] Revit " + application.ControlledApplication.VersionName + " build "
+                _log.Info("[Startup] Revit " + application.ControlledApplication.VersionName + " build "
                     + application.ControlledApplication.VersionBuild + ", plugin "
                     + Assembly.GetExecutingAssembly().GetName().Version);
-            }, null);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("[Startup] the plugin did not start", ex);
+            }
         }
 
-        /// <summary>One window per session: the second call restores and activates the open window.</summary>
         public static void OpenWindow(UIApplication application)
         {
             if (!_isStarted)
@@ -80,48 +82,63 @@ namespace RevitNumbering
                 return;
             }
 
-            SafeRunner.Run(_log, "OpenWindow", () =>
+            try
             {
-                if (_window != null)
-                {
-                    if (_window.WindowState == WindowState.Minimized)
-                    {
-                        _window.WindowState = WindowState.Normal;
-                    }
-
-                    _window.Activate();
-                    return;
-                }
-
-                _documents.Refresh(application);
-                var session = new NumberingSession(_runner, _model, _documents,
-                    new SettingsStore(_settingsPath, _log), _log);
-                var window = new MainWindow(new MainViewModel(session, _log), application.MainWindowHandle);
-                window.Closed += (sender, e) => _window = null;
-                _window = window;
-                window.Show();
-            }, exception => TaskDialog.Show(Texts.WindowTitle, string.Format(Texts.OpenFailed, _log.FilePath)));
+                ShowWindow(application);
+            }
+            catch (Exception ex)
+            {
+                _log.Error("[OpenWindow] unhandled exception", ex);
+                TaskDialog.Show(Texts.WindowTitle, string.Format(Texts.OpenFailed, _log.FilePath));
+            }
         }
 
-        public static void Shutdown(UIControlledApplication application)
+        public static void Shutdown()
         {
             if (_log == null)
             {
                 return;
             }
 
-            // Every step is wrapped: a failure of one does not stop the others.
-            SafeRunner.Run(_log, "Shutdown.Window", CloseWindowWithoutQuestion, null);
-            SafeRunner.Run(_log, "Shutdown.Documents", () => _documents?.Unsubscribe(), null);
-            SafeRunner.Run(_log, "Shutdown.Runner", () => _runner?.Dispose(), null);
+            // Every step is wrapped: a failure in one does not stop the others.
+            SafeRunner.Run(_log, "Shutdown.Window", CloseWindow);
+            SafeRunner.Run(_log, "Shutdown.Documents", () => _documents?.Unsubscribe());
+            SafeRunner.Run(_log, "Shutdown.Runner", () => _runner?.Dispose());
             _isStarted = false;
             _log.Info("[Shutdown] plugin stopped");
         }
 
-        /// <summary>Revit is closing: the window closes without the question about unsaved settings.</summary>
-        private static void CloseWindowWithoutQuestion()
+        // For the loader: a failure outside the plugin (the ribbon) goes to the same log. Never throws.
+        public static void LogError(string operation, Exception exception)
         {
-            _window?.CloseWithoutQuestion();
+            _log?.Error("[" + operation + "] failed", exception);
+        }
+
+        // One window at a time: a second call restores and activates the open window.
+        private static void ShowWindow(UIApplication application)
+        {
+            if (_window != null)
+            {
+                if (_window.WindowState == WindowState.Minimized)
+                {
+                    _window.WindowState = WindowState.Normal;
+                }
+
+                _window.Activate();
+                return;
+            }
+
+            _documents.Refresh(application);
+            var session = new NumberingSession(_runner, _model, _documents, new SettingsStore(_settingsPath, _log), _log);
+            _window = new MainWindow(new MainViewModel(session, _log), application.MainWindowHandle);
+            _window.Closed += (sender, e) => _window = null;
+            _window.Show();
+        }
+
+        // Closing the window also saves the settings.
+        private static void CloseWindow()
+        {
+            _window?.Close();
         }
     }
 }

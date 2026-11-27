@@ -4,9 +4,7 @@ using Autodesk.Revit.UI;
 
 namespace RevitNumbering.Commands
 {
-    /// <summary>
-    /// Ribbon command: shows the plugin window or activates the one that is already open.
-    /// </summary>
+    // Ribbon command: shows the plugin window, or activates the one that is already open.
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
     public class OpenWindowCommand : IExternalCommand

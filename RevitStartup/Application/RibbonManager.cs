@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.UI;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -6,18 +6,14 @@ using System.Reflection;
 
 namespace RevitStartup.Application
 {
-    /// <summary>
-    /// Class for generating Revit tab and panels
-    /// </summary>
     public class RibbonManager
     {
-        // Texts of the ribbon.
         const string TabName = "RevitNumbering";
         const string PanelName = "Нумерация";
         const string ButtonText = "Нумерация";
         const string ButtonToolTip = "Нумерация элементов: стены, двери, окна, помещения";
 
-        // The command lives in the plugin module assembly, deployed next to RevitStartup.dll.
+        // The command is in the plugin module, which is deployed next to RevitStartup.dll.
         const string ModuleAssemblyName = "RevitNumbering.dll";
         const string OpenWindowCommandClass = "RevitNumbering.Commands.OpenWindowCommand";
 
@@ -38,7 +34,7 @@ namespace RevitStartup.Application
             }
             catch (Exception ex)
             {
-                // The tab may already exist
+                // The tab may already exist.
                 Debug.WriteLine(ex.Message);
             }
 

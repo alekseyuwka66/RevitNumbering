@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.Attributes;
+using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using System;
 using System.IO;
@@ -6,9 +6,6 @@ using System.Reflection;
 
 namespace RevitStartup.Application
 {
-    /// <summary>
-    /// Class for running the application in Revit
-    /// </summary>
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
     public class ExternalApplication : IExternalApplication
@@ -23,18 +20,18 @@ namespace RevitStartup.Application
             }
             catch (Exception ex)
             {
-                // PluginEntry has already written the details to its log; the ribbon is created anyway:
-                // its button then tells the user that the plugin did not start.
-                System.Diagnostics.Debug.WriteLine(ex);
+                // PluginEntry catches its own failures. This catches only a failure to load RevitNumbering itself.
+                LogFailure("Startup", ex);
             }
 
             try
             {
+                // The ribbon is created even if the plugin failed: its button then tells the user that the plugin did not start.
                 RibbonManager.OnStartup(application);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
+                LogFailure("Ribbon", ex);
             }
 
             return Result.Succeeded;
@@ -44,17 +41,22 @@ namespace RevitStartup.Application
         {
             try
             {
-                ShutdownPlugin(application);
+                ShutdownPlugin();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
+                LogFailure("Shutdown", ex);
+            }
+            finally
+            {
+                // After ShutdownPlugin: it may still need the handler to load plugin types.
+                AppDomain.CurrentDomain.AssemblyResolve -= OnResolveAssembly;
             }
 
             return Result.Succeeded;
         }
 
-        /// <summary>Separate method: types of RevitNumbering load only after AssemblyResolve is subscribed.</summary>
+        // A separate method with NoInlining: types of RevitNumbering must load only after AssemblyResolve is subscribed.
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         private static void InitializePlugin(UIControlledApplication application)
         {
@@ -62,12 +64,32 @@ namespace RevitStartup.Application
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static void ShutdownPlugin(UIControlledApplication application)
+        private static void ShutdownPlugin()
         {
-            RevitNumbering.PluginEntry.Shutdown(application);
+            RevitNumbering.PluginEntry.Shutdown();
         }
 
-        public static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        // The failure goes to the plugin log. If the plugin itself did not load, only the debugger sees it.
+        private static void LogFailure(string operation, Exception exception)
+        {
+            try
+            {
+                WriteToPluginLog(operation, exception);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(exception);
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void WriteToPluginLog(string operation, Exception exception)
+        {
+            RevitNumbering.PluginEntry.LogError(operation, exception);
+        }
+
+        private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
             string directoryDLLs = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
@@ -79,7 +101,7 @@ namespace RevitStartup.Application
             return LoadAssemblyFromDirectory(directoryDLLs, assemblyName);
         }
 
-        public static Assembly LoadAssemblyFromDirectory(string directory, string assemblyName)
+        private static Assembly LoadAssemblyFromDirectory(string directory, string assemblyName)
         {
             try
             {
@@ -98,6 +120,4 @@ namespace RevitStartup.Application
             }
         }
     }
-
-
 }
