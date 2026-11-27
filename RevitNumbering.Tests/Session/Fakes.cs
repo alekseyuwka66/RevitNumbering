@@ -3,53 +3,107 @@ using RevitNumbering.Core.Model;
 
 namespace RevitNumbering.Tests.Session
 {
-    /// <summary>Runs the action at once, as if Revit were free.</summary>
+    // Runs the posted action at once, as if Revit were free.
+    // With HoldCalls the action waits, as if Revit were busy, until RunPosted.
     internal sealed class FakeRunner : IRevitRunner
     {
-        public bool IsExecuting { get; private set; }
+        private Action _posted;
 
-        public bool IsPending => false;
+        public bool HoldCalls { get; set; }
 
-        public Task<T> Run<T>(Func<T> action)
+        public bool Run(Action action)
         {
-            IsExecuting = true;
-            try
+            if (HoldCalls)
             {
-                return Task.FromResult(action());
+                _posted = action;
             }
-            catch (Exception ex)
+            else
             {
-                return Task.FromException<T>(ex);
+                action();
             }
-            finally
-            {
-                IsExecuting = false;
-            }
+
+            return true;
         }
 
-        public void CancelPending()
+        public bool CancelPending()
         {
+            bool posted = _posted != null;
+            _posted = null;
+            return posted;
+        }
+
+        public void RunPosted()
+        {
+            Action action = _posted;
+            _posted = null;
+            action?.Invoke();
         }
     }
 
-    /// <summary>A model in memory: Read returns copies of Items, Write records what it was asked to write.</summary>
+    internal sealed class FakeDocuments : IDocuments
+    {
+        public DocumentInfo Active { get; private set; } = Project(1);
+
+        public event Action ActiveChanged;
+
+        public event Action<HistoryChange> NumberingHistoryChanged;
+
+        public static DocumentInfo Project(int id)
+        {
+            return new DocumentInfo { Id = new DocumentId(id), Kind = DocumentKind.Project };
+        }
+
+        // The user switched to another document: Revit raises the event in the API context.
+        public void Activate(DocumentInfo document)
+        {
+            Active = document;
+            ActiveChanged?.Invoke();
+        }
+
+        // The numbering step was undone or redone in Revit.
+        public void RaiseHistory(HistoryChange change)
+        {
+            NumberingHistoryChanged?.Invoke(change);
+        }
+
+        // The active document changed, but the event has not come yet.
+        public void SwitchUnnoticed(DocumentInfo document)
+        {
+            Active = document;
+        }
+    }
+
+    // A model in memory. Read returns copies of Items, Write records what it was asked to write.
+    // Like the Revit layer, it serves only the active document.
     internal sealed class FakeRevitModel : IRevitModel
     {
-        public List<NumberingItem> Items { get; set; } = new List<NumberingItem>();
+        private readonly FakeDocuments _documents;
 
-        public List<LevelInfo> Levels { get; set; } = new List<LevelInfo>();
+        public FakeRevitModel(FakeDocuments documents)
+        {
+            _documents = documents;
+        }
 
-        /// <summary>false: every call for the document throws, as when it is closed or not active.</summary>
+        public List<NumberingItem> Items { get; } = new List<NumberingItem>();
+
+        public List<LevelInfo> Levels { get; } = new List<LevelInfo>();
+
+        // False: every call throws, as when the document is closed.
         public bool DocumentAvailable { get; set; } = true;
 
-        /// <summary>null: Write was not called.</summary>
+        // Null: Write was not called.
         public List<WriteItem> Written { get; private set; }
+
+        public IWriteProgress LastProgress { get; private set; }
+
+        // Items per batch of Write. The progress is called after every batch. 0: one batch.
+        public int BatchSize { get; set; }
 
         public IReadOnlyList<string> CategoryKeys { get; } = new[] { "Walls", "Doors", "Windows", "Rooms" };
 
         public CategoryData Read(DocumentId document, string categoryKey)
         {
-            RequireDocument();
+            RequireActive(document);
             return new CategoryData
             {
                 Items = Items.Select(Copy).ToList(),
@@ -57,40 +111,57 @@ namespace RevitNumbering.Tests.Session
             };
         }
 
-        public List<NumberingItem> ReadItems(DocumentId document, string categoryKey, List<long> ids)
-        {
-            return Items.Where(item => ids.Contains(item.Id)).Select(Copy).ToList();
-        }
-
-        public List<LevelInfo> ReadLevels(DocumentId document)
-        {
-            return Levels.ToList();
-        }
+        // What the user picks in the model. null: Esc.
+        public List<long> PickResult { get; set; }
 
         public List<long> PickElements(DocumentId document, string categoryKey)
         {
-            return null;
+            return PickResult;
         }
 
         public void ShowElement(DocumentId document, long id)
         {
         }
 
-        public WriteResult Write(DocumentId document, string categoryKey, List<WriteItem> items)
+        public WriteResult Write(DocumentId document, string categoryKey, List<WriteItem> items,
+            IWriteProgress progress)
         {
-            RequireDocument();
-            Written = items;
-            foreach (WriteItem item in items)
+            RequireActive(document);
+            LastProgress = progress;
+            Written = new List<WriteItem>();
+            var result = new WriteResult();
+            var before = new Dictionary<long, string>();
+            int size = BatchSize > 0 ? BatchSize : Math.Max(items.Count, 1);
+            for (int start = 0; start < items.Count; start += size)
             {
-                Items.Single(i => i.Id == item.Id).Value = item.Value;
+                foreach (WriteItem item in items.GetRange(start, Math.Min(size, items.Count - start)))
+                {
+                    NumberingItem target = Items.Single(i => i.Id == item.Id);
+                    before[item.Id] = target.Value;
+                    target.Value = item.Value;
+                    Written.Add(item);
+                    result.WrittenCount++;
+                }
+
+                int done = start + Math.Min(size, items.Count - start);
+                if (progress != null && !progress.Continue(done, items.Count) && done < items.Count)
+                {
+                    foreach (KeyValuePair<long, string> old in before)
+                    {
+                        Items.Single(i => i.Id == old.Key).Value = old.Value;
+                    }
+
+                    Written = new List<WriteItem>();
+                    return new WriteResult { Cancelled = true };
+                }
             }
 
-            return new WriteResult { WrittenCount = items.Count };
+            return result;
         }
 
-        private void RequireDocument()
+        private void RequireActive(DocumentId document)
         {
-            if (!DocumentAvailable)
+            if (!DocumentAvailable || !document.Equals(_documents.Active.Id))
             {
                 throw new DocumentUnavailableException();
             }
@@ -110,33 +181,6 @@ namespace RevitNumbering.Tests.Session
                 Lock = item.Lock,
                 LockedBy = item.LockedBy,
             };
-        }
-    }
-
-    internal sealed class FakeDocuments : IDocuments
-    {
-        public DocumentInfo Active { get; set; } =
-            new DocumentInfo { Id = new DocumentId(1), Kind = DocumentKind.Project, Title = "Project" };
-
-        public event Action ActiveChanged;
-
-        public event Action<DocumentId> Closed;
-
-        public event Action<DocumentId, ModelChanges> Changed;
-
-        public void RaiseActiveChanged()
-        {
-            ActiveChanged?.Invoke();
-        }
-
-        public void RaiseClosed(DocumentId document)
-        {
-            Closed?.Invoke(document);
-        }
-
-        public void RaiseChanged(DocumentId document, ModelChanges changes)
-        {
-            Changed?.Invoke(document, changes);
         }
     }
 }

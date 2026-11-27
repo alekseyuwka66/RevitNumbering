@@ -4,11 +4,10 @@ using System.Text;
 
 namespace RevitNumbering.Core.Logging
 {
-    /// <summary>
-    /// File log: one file per day, "numbering-yyyy-MM-dd.log" in the given folder.
-    /// No public member throws: losing a log line is better than failing an entry point.
-    /// </summary>
-    public sealed class FileLog : ILog
+    // The plugin log, in English: one file per day, "numbering-yyyy-MM-dd.log". A message starts with
+    // its source in brackets, like "[Apply] written 42". No public member throws:
+    // losing a log line is better than breaking an entry point.
+    public sealed class FileLog
     {
         private const string FilePrefix = "numbering-";
         private const string FileExtension = ".log";
@@ -18,13 +17,12 @@ namespace RevitNumbering.Core.Logging
         private const int WriteAttempts = 3;
         private const int WriteRetryDelayMs = 20;
 
+        // Static: all FileLog objects write to the same files.
         private static readonly object WriteLock = new object();
 
         private readonly string _directory;
         private readonly Func<DateTime> _now;
 
-        /// <param name="directory">Log folder; created on the first write.</param>
-        /// <param name="now">Local time; null: the system clock.</param>
         public FileLog(string directory, Func<DateTime> now = null)
         {
             _directory = directory;
@@ -48,7 +46,7 @@ namespace RevitNumbering.Core.Logging
             Write("ERROR", message, exception);
         }
 
-        /// <summary>Deletes log files older than the retention period, by the date in the file name.</summary>
+        // Deletes log files older than the retention period. The age comes from the date in the file name.
         public void DeleteOldFiles()
         {
             try
@@ -89,7 +87,6 @@ namespace RevitNumbering.Core.Logging
             }
             catch (Exception ex)
             {
-                // Busy file or no rights: skip it and go on.
                 Debug.WriteLine(ex);
             }
         }
@@ -137,7 +134,7 @@ namespace RevitNumbering.Core.Logging
                 }
                 catch (IOException) when (attempt < WriteAttempts)
                 {
-                    // Another Revit process of the same version is writing the file.
+                    // Another Revit process may be writing the same file. Try again.
                     Thread.Sleep(WriteRetryDelayMs);
                 }
             }

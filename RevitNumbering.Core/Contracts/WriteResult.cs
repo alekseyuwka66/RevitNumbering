@@ -1,6 +1,5 @@
 namespace RevitNumbering.Core.Contracts
 {
-    /// <summary>A value to write into the target parameter of one element.</summary>
     public sealed class WriteItem
     {
         public long Id { get; set; }
@@ -12,6 +11,9 @@ namespace RevitNumbering.Core.Contracts
     {
         public int WrittenCount { get; set; }
 
+        // The user cancelled the write. Everything is rolled back, no value is written.
+        public bool Cancelled { get; set; }
+
         public List<WriteFailure> Failures { get; set; } = new List<WriteFailure>();
     }
 
@@ -21,7 +23,7 @@ namespace RevitNumbering.Core.Contracts
 
         public WriteFailReason Reason { get; set; }
 
-        /// <summary>Details from Revit: the owner name or the failure text.</summary>
+        // Text from Revit: the owner name or the failure text.
         public string Details { get; set; }
     }
 

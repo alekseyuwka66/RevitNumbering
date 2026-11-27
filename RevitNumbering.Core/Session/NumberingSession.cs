@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using RevitNumbering.Core.Contracts;
 using RevitNumbering.Core.Logging;
 using RevitNumbering.Core.Model;
@@ -7,11 +6,10 @@ using RevitNumbering.Core.Settings;
 
 namespace RevitNumbering.Core.Session
 {
-    /// <summary>
-    /// The coordinator: the only class that knows every module. View models work only with it.
-    /// One session serves one opening of the window. Everything runs on the main thread of Revit;
-    /// async is used only to wait for a call in the Revit API context.
-    /// </summary>
+    // The coordinator: the only class that knows all modules. View models talk only to it.
+    // One session lives as long as one window. The window and Revit share one thread, so a command
+    // posts its work through the runner, and the work runs in the API context when Revit is free.
+    // The window follows the active project: its data always comes from the active project.
     public sealed class NumberingSession
     {
         private static readonly DocumentInfo NoDocument = new DocumentInfo { Kind = DocumentKind.None };
@@ -20,46 +18,53 @@ namespace RevitNumbering.Core.Session
         private readonly IRevitModel _model;
         private readonly IDocuments _documents;
         private readonly SettingsStore _store;
-        private readonly ILog _log;
+        private readonly FileLog _log;
+        private readonly NumberingSettings _settings;
 
-        /// <summary>Elements picked in the model, per category.</summary>
+        // Elements picked in the model, per category.
         private readonly List<CategoryPick> _picks = new List<CategoryPick>();
 
-        private NumberingSettings _settings;
-        private string _savedCategories;
-
-        /// <summary>Rows visible in the window; null: all.</summary>
+        // Rows visible after the search. Null: all rows.
         private HashSet<long> _visibleIds;
 
-        /// <summary>The pending call was cancelled because the document changed, not by the user.</summary>
-        private bool _cancelledByDocument;
+        // Runs after the posted work. It also runs when the work is dropped because the document changed,
+        // but not after an unexpected exception.
+        private Action _after;
 
+        // Reads the settings first. If that fails, nothing is subscribed to Revit.
         public NumberingSession(IRevitRunner runner, IRevitModel model, IDocuments documents,
-            SettingsStore settings, ILog log)
+            SettingsStore store, FileLog log)
         {
             _runner = runner;
             _model = model;
             _documents = documents;
-            _store = settings;
+            _store = store;
             _log = log;
 
+            LoadedSettings = store.Load(model.CategoryKeys);
+            _settings = LoadedSettings.Settings;
+            CategoryKey = CategoryKeys.Contains(_settings.LastCategory) ? _settings.LastCategory : CategoryKeys[0];
             WindowDocument = NoDocument;
-            StartupProblems = new List<Problem>();
             _documents.ActiveChanged += OnActiveChanged;
-            _documents.Closed += OnDocumentClosed;
-            _documents.Changed += OnModelChanged;
+            _documents.NumberingHistoryChanged += OnNumberingHistoryChanged;
         }
 
-        /// <summary>The data and the preview were updated, also from the model.</summary>
         public event Action DataChanged;
 
-        /// <summary>The document of the window stopped or started being the active one, was closed or replaced.</summary>
-        public event Action DocumentStateChanged;
+        // The session became busy or free, or the table may be stale: refresh the buttons and the status.
+        public event Action StateChanged;
 
-        /// <summary>The settings were not read or not written.</summary>
-        public event Action<SettingsNotice> SettingsNotice;
+        public event Action<Exception> Failed;
 
-        /// <summary>The document the window data came from; Kind is None when there is no data.</summary>
+        // The table is going to be reloaded because the numbering was undone or redone in Revit.
+        public event Action<HistoryChange> HistoryChanged;
+
+        // What loading the settings gave. The window warns the user about an unreadable file.
+        public SettingsLoadResult LoadedSettings { get; }
+
+        public string SettingsFilePath => _store.FilePath;
+
+        // The document that the window data came from. Kind is None when there is no data.
         public DocumentInfo WindowDocument { get; private set; }
 
         public DocumentInfo ActiveDocument => _documents.Active;
@@ -71,75 +76,32 @@ namespace RevitNumbering.Core.Session
 
         public string CategoryKey { get; private set; }
 
-        /// <summary>Settings of the current category; the settings panel edits this object.</summary>
-        public CategorySettings Settings => _settings?.Find(CategoryKey);
+        public CategorySettings Settings => _settings.Find(CategoryKey);
 
-        /// <summary>Elements picked in the model for the current category; null: the scope is the visible rows.</summary>
+        // Elements picked in the model for the current category. Null: the scope is the visible rows.
         public List<long> Picked => _picks.Find(pick => pick.CategoryKey == CategoryKey)?.Ids;
 
         public CategoryData Data { get; private set; }
 
+        // Set by Recalculate. Null until then, and when there is no data.
         public Preview Preview { get; private set; }
 
-        /// <summary>A call to Revit is posted or running.</summary>
         public bool IsBusy { get; private set; }
 
-        /// <summary>The call is posted but Revit has not started it yet.</summary>
-        public bool IsPending => _runner.IsPending;
+        // The posted call has started. CancelPending can no longer drop it.
+        public bool IsRunning { get; private set; }
 
-        /// <summary>A handler of a model change failed: the table may differ from the model until Refresh.</summary>
+        // A Revit event handler failed, so the table may differ from the model until Refresh.
         public bool DataMayBeStale { get; private set; }
 
-        public bool HasUnsavedSettings => _settings != null && SerializeCategories() != _savedCategories;
-
-        /// <summary>Not empty: the embedded defaults are incomplete and the window must not work.</summary>
-        public List<Problem> StartupProblems { get; private set; }
-
-        /// <summary>Saved position and size of the window; null: centered.</summary>
-        public WindowPlacement WindowPlacement => _settings?.Window;
-
-        /// <summary>
-        /// Before the window is shown: checks the embedded defaults and reads the settings
-        /// (the last category, the window placement). No Revit call.
-        /// </summary>
-        public void Initialize()
+        public void Refresh()
         {
-            if (_settings != null || StartupProblems.Count > 0)
-            {
-                return;
-            }
-
-            StartupProblems = SettingsStore.CheckDefaults(CategoryKeys);
-            if (StartupProblems.Count > 0)
-            {
-                _log.Warning("[Open] embedded defaults are incomplete, the window is blocked");
-                return;
-            }
-
-            SettingsLoadResult loaded = _store.Load(CategoryKeys);
-            _settings = loaded.Settings;
-            _savedCategories = SerializeCategories();
-            CategoryKey = CategoryKeys.Contains(_settings.LastCategory) ? _settings.LastCategory : CategoryKeys[0];
-            foreach (SettingsNotice notice in loaded.Notices)
-            {
-                SettingsNotice?.Invoke(notice);
-            }
+            Post("Load", LoadActive);
         }
 
-        /// <summary>When the window opens: the last category of the active document.</summary>
-        public async Task OpenAsync()
+        public void SelectCategory(string key)
         {
-            Initialize();
-            if (_settings != null)
-            {
-                await LoadAsync();
-            }
-        }
-
-        /// <summary>Loads the category from the active document; its own pick is restored.</summary>
-        public async Task SelectCategoryAsync(string key)
-        {
-            if (IsBusy || _settings == null || !CategoryKeys.Contains(key))
+            if (IsBusy || !CategoryKeys.Contains(key))
             {
                 return;
             }
@@ -148,42 +110,137 @@ namespace RevitNumbering.Core.Session
             _settings.LastCategory = key;
             _visibleIds = null;
 
-            // The table must not show the previous category while the new one is being read.
+            // The table must not show the old category while the new one is being read.
             Data = null;
             Preview = null;
             DataChanged?.Invoke();
-            await LoadAsync();
+            Refresh();
         }
 
-        /// <summary>Loads the active document with the current settings of the window.</summary>
-        public async Task RefreshAsync()
-        {
-            if (IsBusy || _settings == null)
-            {
-                return;
-            }
-
-            await LoadAsync();
-        }
-
-        /// <summary>After the search, the template or the settings changed. No Revit call. visibleIds null: all rows.</summary>
+        // No Revit call here. visibleIds null means all rows.
         public void Recalculate(HashSet<long> visibleIds)
         {
             _visibleIds = visibleIds;
-            Preview = Data == null ? null : NumberingCalculator.Calculate(BuildRequest(Data));
+            Preview = Data == null ? null : NumberingCalculator.Calculate(Data, Scope(Data), Settings);
         }
 
-        /// <summary>Lets the user pick elements of the category in the model; Esc changes nothing.</summary>
-        public async Task PickAsync()
+        public void Pick()
         {
-            if (IsBusy || Data == null)
+            if (Data == null || !IsWindowDocumentActive)
             {
                 return;
             }
 
             DocumentId document = WindowDocument.Id;
             string category = CategoryKey;
-            List<long> ids = await RunAsync("Pick", () => _model.PickElements(document, category));
+            Post("Pick", () => KeepPick(category, _model.PickElements(document, category)));
+        }
+
+        public void ResetPick()
+        {
+            _picks.RemoveAll(pick => pick.CategoryKey == CategoryKey);
+            DataChanged?.Invoke();
+        }
+
+        public void ShowElement(long id)
+        {
+            if (Data == null || !IsWindowDocumentActive)
+            {
+                return;
+            }
+
+            DocumentId document = WindowDocument.Id;
+            Post("Show", () => _model.ShowElement(document, id));
+        }
+
+        // One call to Revit: read again, calculate again, compare with what the window shows, then write.
+        // Nothing is written if the model differs from what the user saw. done gets the result.
+        public void Apply(Action<ApplyResult> done, IWriteProgress progress = null)
+        {
+            Preview shown = Preview;
+            if (shown == null || !shown.CanApply || !IsWindowDocumentActive)
+            {
+                return;
+            }
+
+            DocumentId document = WindowDocument.Id;
+            string category = CategoryKey;
+
+            // It stays DocumentUnavailable if the document is gone before or during the call.
+            var result = new ApplyResult(ApplyOutcome.DocumentUnavailable);
+            Post("Apply", () => result = ReadCompareWrite(document, category, shown, progress), () => done(result));
+        }
+
+        public bool CancelPending()
+        {
+            if (!_runner.CancelPending())
+            {
+                return false;
+            }
+
+            _after = null;
+            IsBusy = false;
+            StateChanged?.Invoke();
+            return true;
+        }
+
+        // Returns false when writing failed (see the log). An unreadable file is left as it is,
+        // so the user can fix or delete it.
+        public bool SaveSettings()
+        {
+            return LoadedSettings.FileUnreadable || _store.Save(_settings);
+        }
+
+        public void Close()
+        {
+            _documents.ActiveChanged -= OnActiveChanged;
+            _documents.NumberingHistoryChanged -= OnNumberingHistoryChanged;
+            _runner.CancelPending();
+            SaveSettings();
+        }
+
+        // The body of Apply. Runs in the API context.
+        private ApplyResult ReadCompareWrite(DocumentId document, string category, Preview shown,
+            IWriteProgress progress)
+        {
+            CategoryData fresh = _model.Read(document, category);
+            Preview plan = NumberingCalculator.Calculate(fresh, Scope(fresh), Settings);
+            if (!plan.SameAs(shown))
+            {
+                _log.Warning("[Apply] the model differs from the window, nothing is written");
+                SetData(fresh);
+                return new ApplyResult(ApplyOutcome.DataChanged);
+            }
+
+            List<WriteItem> items = plan.ToWrite();
+            WriteResult written = _model.Write(document, category, items, progress);
+
+            // After the write, the table shows the real values from the model.
+            SetData(_model.Read(document, category));
+
+            if (written.Cancelled)
+            {
+                _log.Info("[Apply] " + category + ": cancelled by the user, rolled back");
+                return new ApplyResult(ApplyOutcome.Cancelled);
+            }
+
+            _log.Info("[Apply] " + category + ": to write " + items.Count + ", written " + written.WrittenCount
+                + ", failed " + written.Failures.Count);
+            LogFailureDetails(written.Failures);
+            return new ApplyResult(ApplyOutcome.Written, written);
+        }
+
+        // Only failures with a Revit text go to the log. The user already sees the other reasons in the summary.
+        private void LogFailureDetails(List<WriteFailure> failures)
+        {
+            foreach (WriteFailure failure in failures.Where(failure => !string.IsNullOrEmpty(failure.Details)))
+            {
+                _log.Warning("[Apply] not written: " + failure.Id + ", " + failure.Reason + " " + failure.Details);
+            }
+        }
+
+        private void KeepPick(string category, List<long> ids)
+        {
             if (ids == null)
             {
                 return;
@@ -191,414 +248,190 @@ namespace RevitNumbering.Core.Session
 
             _picks.RemoveAll(pick => pick.CategoryKey == category);
             _picks.Add(new CategoryPick { CategoryKey = category, Ids = ids });
-            Recalculate(_visibleIds);
             DataChanged?.Invoke();
         }
 
-        /// <summary>Back to the scope of visible rows.</summary>
-        public void ResetPick()
+        private void Post(string operation, Action work, Action after = null)
         {
-            _picks.RemoveAll(pick => pick.CategoryKey == CategoryKey);
-            Recalculate(_visibleIds);
-            DataChanged?.Invoke();
-        }
-
-        /// <summary>Zooms to the element in Revit and selects it. Does not touch the scope.</summary>
-        public async Task ShowElementAsync(long id)
-        {
-            if (IsBusy || Data == null || !IsWindowDocumentActive)
+            if (IsBusy)
             {
                 return;
             }
 
-            DocumentId document = WindowDocument.Id;
-            await RunAsync("Show", () =>
+            IsBusy = true;
+            _after = after;
+            StateChanged?.Invoke();
+            if (!_runner.Run(() => Execute(operation, work)))
             {
-                _model.ShowElement(document, id);
-                return true;
-            });
+                _log.Warning("[" + operation + "] Revit refused the call");
+                _after = null;
+                IsBusy = false;
+                StateChanged?.Invoke();
+            }
         }
 
-        /// <summary>
-        /// One call to Revit: read again, calculate again, compare with what the window shows, write.
-        /// Nothing is written when the model differs from what the user saw.
-        /// </summary>
-        public async Task<ApplyResult> ApplyAsync()
+        private void Execute(string operation, Action work)
         {
-            Preview shown = Preview;
-            if (IsBusy || shown == null || !shown.CanApply || !IsWindowDocumentActive)
+            bool ended = false;
+            IsRunning = true;
+            StateChanged?.Invoke();
+            SafeRunner.Run(_log, operation, () =>
             {
-                return ApplyResult.Cancelled();
-            }
+                RunInDocument(operation, work);
+                ended = true;
+            }, ex => Failed?.Invoke(ex));
 
-            DocumentId document = WindowDocument.Id;
-            string category = CategoryKey;
-            Stopwatch watch = Stopwatch.StartNew();
-            ApplyResult result;
-            IsBusy = true;
-            _cancelledByDocument = false;
+            Action after = _after;
+            _after = null;
+            IsRunning = false;
+            IsBusy = false;
+
+            // The active document may have changed while the work waited or ran.
+            SafeRunner.Run(_log, "FollowActiveDocument", FollowActiveDocument, _ => MarkDataMayBeStale());
+            StateChanged?.Invoke();
+            if (ended)
+            {
+                after?.Invoke();
+            }
+        }
+
+        private void RunInDocument(string operation, Action work)
+        {
             try
             {
-                result = await _runner.Run(() =>
-                {
-                    long waitedMs = watch.ElapsedMilliseconds;
-                    CategoryData fresh = _model.Read(document, category);
-                    Preview plan = NumberingCalculator.Calculate(BuildRequest(fresh));
-                    long readMs = watch.ElapsedMilliseconds - waitedMs;
-                    if (!plan.SameAs(shown))
-                    {
-                        return ApplyResult.DataChanged(fresh, plan);
-                    }
-
-                    List<WriteItem> items = plan.ToWrite();
-                    WriteResult written = _model.Write(document, category, items);
-                    long writeMs = watch.ElapsedMilliseconds - waitedMs - readMs;
-
-                    // After the write the table shows the actual values of the model.
-                    CategoryData actual = _model.Read(document, category);
-                    _log.Info("[Apply] " + category + ": to write " + items.Count + ", written " + written.WrittenCount
-                        + ", failed " + written.Failures.Count + "; waited " + waitedMs + " ms, read " + readMs
-                        + " ms, write " + writeMs + " ms, reread " + (watch.ElapsedMilliseconds - waitedMs - readMs - writeMs)
-                        + " ms");
-                    return ApplyResult.Written(written, actual);
-                });
+                work();
             }
             catch (DocumentUnavailableException)
             {
-                result = ApplyResult.DocumentUnavailable();
+                // A closed or inactive document is a normal end of the work, not a failure.
+                _log.Warning("[" + operation + "] the document is closed or not active");
             }
-            catch (OperationCanceledException)
-            {
-                result = _cancelledByDocument ? ApplyResult.DocumentUnavailable() : ApplyResult.Cancelled();
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-
-            switch (result.Outcome)
-            {
-                case ApplyOutcome.Written:
-                    foreach (WriteFailure failure in result.Write.Failures)
-                    {
-                        _log.Warning("[Apply] not written: " + failure.Id + ", " + failure.Reason + " " + failure.Details);
-                    }
-
-                    SetData(result.Fresh);
-                    SaveSettings();
-                    DataChanged?.Invoke();
-                    break;
-                case ApplyOutcome.DataChanged:
-                    _log.Warning("[Apply] the model differs from the window, nothing is written");
-                    Data = result.Fresh;
-                    Preview = result.FreshPreview;
-                    DataChanged?.Invoke();
-                    break;
-                case ApplyOutcome.DocumentUnavailable:
-                    _log.Warning("[Apply] the document is closed or not active, nothing is written");
-                    DocumentStateChanged?.Invoke();
-                    break;
-            }
-
-            return result;
         }
 
-        /// <summary>Cancels the posted call if Revit has not started it yet.</summary>
-        public void CancelPending()
+        // Another project is loaded at once. Without a project the table is empty.
+        private void FollowActiveDocument()
         {
-            _runner.CancelPending();
+            if (_documents.Active.Kind != DocumentKind.Project)
+            {
+                if (Data != null)
+                {
+                    ClearData();
+                }
+            }
+            else if (!IsWindowDocumentActive)
+            {
+                LoadActive();
+            }
         }
 
-        /// <summary>Writes the whole settings file. false: not saved, a notice is raised.</summary>
-        public bool SaveSettings()
-        {
-            if (_settings == null)
-            {
-                return false;
-            }
-
-            if (_store.Save(_settings))
-            {
-                _savedCategories = SerializeCategories();
-                return true;
-            }
-
-            SettingsNotice?.Invoke(new SettingsNotice(
-                _store.IsReadOnly ? SettingsNoticeKind.NewerSchema : SettingsNoticeKind.SaveFailed, _store.FilePath));
-            return false;
-        }
-
-        /// <summary>Writes the current settings to the chosen file. false: not written, a notice is raised.</summary>
-        public bool ExportSettings(string path)
-        {
-            if (_settings != null && _store.Export(_settings, path))
-            {
-                return true;
-            }
-
-            SettingsNotice?.Invoke(new SettingsNotice(SettingsNoticeKind.SaveFailed, path));
-            return false;
-        }
-
-        /// <summary>Replaces all settings with a valid file; an invalid file changes nothing.</summary>
-        public ImportResult ImportSettings(string path)
-        {
-            if (_settings == null)
-            {
-                return ImportResult.Invalid;
-            }
-
-            ImportResult result = _store.Import(path, CategoryKeys, out NumberingSettings imported);
-            if (result == ImportResult.Imported)
-            {
-                // The window stays on its category and keeps its position.
-                imported.LastCategory = CategoryKey;
-                imported.Window = _settings.Window;
-                _settings = imported;
-                _savedCategories = SerializeCategories();
-                Recalculate(_visibleIds);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// When the window closes: remembers its placement and the last category, cancels the posted call
-        /// and stops listening to Revit. Unsaved category settings are not written here.
-        /// </summary>
-        public void Close(WindowPlacement placement)
-        {
-            _documents.ActiveChanged -= OnActiveChanged;
-            _documents.Closed -= OnDocumentClosed;
-            _documents.Changed -= OnModelChanged;
-            _runner.CancelPending();
-
-            if (_settings == null || _store.IsReadOnly)
-            {
-                return;
-            }
-
-            NumberingSettings saved = HasUnsavedSettings ? _store.Load(CategoryKeys).Settings : _settings;
-            saved.LastCategory = CategoryKey;
-            saved.Window = placement ?? saved.Window;
-            _store.Save(saved);
-        }
-
-        /// <summary>Called when a handler of a Revit event failed.</summary>
-        public void MarkDataMayBeStale()
-        {
-            DataMayBeStale = true;
-            DocumentStateChanged?.Invoke();
-        }
-
-        /// <summary>Loads the current category of the active document through the runner.</summary>
-        private async Task LoadAsync()
+        private void LoadActive()
         {
             DocumentInfo active = _documents.Active;
             if (active.Kind != DocumentKind.Project)
             {
-                ClearData(active);
+                ClearData();
                 return;
             }
 
-            string category = CategoryKey;
-            Stopwatch watch = Stopwatch.StartNew();
-            CategoryData data = await RunAsync("Load", () => _model.Read(active.Id, category));
-            if (data != null)
-            {
-                AcceptLoaded(active, category, data, watch.ElapsedMilliseconds);
-            }
-        }
-
-        /// <summary>
-        /// Loads the active document right now. Called from handlers of Revit events, where the API
-        /// context is already available.
-        /// </summary>
-        private void LoadInContext()
-        {
-            DocumentInfo active = _documents.Active;
-            if (active.Kind != DocumentKind.Project || _settings == null)
-            {
-                ClearData(active);
-                return;
-            }
-
-            Stopwatch watch = Stopwatch.StartNew();
             CategoryData data = _model.Read(active.Id, CategoryKey);
-            AcceptLoaded(active, CategoryKey, data, watch.ElapsedMilliseconds);
-        }
-
-        private void AcceptLoaded(DocumentInfo document, string category, CategoryData data, long elapsedMs)
-        {
-            if (!document.Id.Equals(WindowDocument.Id))
+            if (!active.Id.Equals(WindowDocument.Id))
             {
                 // Picks belong to the previous document.
                 _picks.Clear();
             }
 
-            WindowDocument = document;
+            WindowDocument = active;
             DataMayBeStale = false;
             SetData(data);
-            _log.Info("[Load] " + category + ": " + data.Items.Count + " elements, " + elapsedMs + " ms");
-            DocumentStateChanged?.Invoke();
-            DataChanged?.Invoke();
+            _log.Info("[Load] " + CategoryKey + ": " + data.Items.Count + " elements");
         }
 
-        private void ClearData(DocumentInfo active)
+        private void ClearData()
         {
-            WindowDocument = active.Kind == DocumentKind.Family ? active : NoDocument;
+            WindowDocument = NoDocument;
             Data = null;
             Preview = null;
             _picks.Clear();
-            DocumentStateChanged?.Invoke();
             DataChanged?.Invoke();
         }
 
+        // Items are kept sorted by id. The preview rows use the same order.
         private void SetData(CategoryData data)
         {
             data.Items.Sort((a, b) => a.Id.CompareTo(b.Id));
             Data = data;
-            Recalculate(_visibleIds);
+            Preview = null;
+            DataChanged?.Invoke();
         }
 
-        /// <summary>
-        /// One call through the runner. Returns default when the call was cancelled or the document
-        /// is no longer available.
-        /// </summary>
-        private async Task<T> RunAsync<T>(string operation, Func<T> action)
-        {
-            IsBusy = true;
-            _cancelledByDocument = false;
-            try
-            {
-                return await _runner.Run(action);
-            }
-            catch (OperationCanceledException)
-            {
-                _log.Info("[" + operation + "] cancelled before Revit started it");
-                return default;
-            }
-            catch (DocumentUnavailableException)
-            {
-                _log.Warning("[" + operation + "] the document is closed or not active");
-                IsBusy = false;
-                DocumentStateChanged?.Invoke();
-                return default;
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-        private NumberingRequest BuildRequest(CategoryData data)
+        // Elements picked in the model, narrowed to the visible rows. Without a pick: the visible rows, or all elements.
+        private HashSet<long> Scope(CategoryData data)
         {
             List<long> picked = Picked;
-            IEnumerable<long> scope = picked ?? (IEnumerable<long>)_visibleIds ?? data.Items.Select(item => item.Id);
-            return new NumberingRequest
+            if (picked != null)
             {
-                Items = data.Items,
-                Levels = data.Levels,
-                Scope = new HashSet<long>(scope),
-                Settings = Settings,
-            };
+                var scope = new HashSet<long>(picked);
+                if (_visibleIds != null)
+                {
+                    scope.IntersectWith(_visibleIds);
+                }
+
+                return scope;
+            }
+
+            return _visibleIds ?? new HashSet<long>(data.Items.Select(item => item.Id));
         }
 
-        private string SerializeCategories()
+        private void MarkDataMayBeStale()
         {
-            return SettingsStore.Serialize(new NumberingSettings { Categories = _settings.Categories });
+            DataMayBeStale = true;
+            StateChanged?.Invoke();
         }
 
-        /// <summary>The user switched to another document or view.</summary>
         private void OnActiveChanged()
         {
-            SafeRunner.Run(_log, "ActiveChanged", () =>
-            {
-                CancelPendingForDocument();
-                if (Data == null && !_runner.IsExecuting)
-                {
-                    // The window has no document: the active project becomes its document at once.
-                    LoadInContext();
-                }
-                else
-                {
-                    DocumentStateChanged?.Invoke();
-                }
-            }, _ => MarkDataMayBeStale());
+            SafeRunner.Run(_log, "ActiveChanged", HandleActiveChanged, _ => MarkDataMayBeStale());
         }
 
-        private void OnDocumentClosed(DocumentId document)
+        private void OnNumberingHistoryChanged(HistoryChange change)
         {
-            SafeRunner.Run(_log, "DocumentClosed", () =>
-            {
-                if (!document.Equals(WindowDocument.Id))
-                {
-                    return;
-                }
-
-                CancelPendingForDocument();
-                DocumentInfo active = _documents.Active;
-                if (active.Kind == DocumentKind.Project && !document.Equals(active.Id) && !_runner.IsExecuting)
-                {
-                    // The list is cleared and the active project is loaded at once.
-                    WindowDocument = NoDocument;
-                    LoadInContext();
-                }
-                else
-                {
-                    ClearData(document.Equals(active.Id) ? NoDocument : active);
-                }
-            }, _ => MarkDataMayBeStale());
+            SafeRunner.Run(_log, "NumberingHistoryChanged", () => HandleNumberingHistoryChanged(change),
+                _ => MarkDataMayBeStale());
         }
 
-        /// <summary>
-        /// Live update. The event comes in the API context, so the changed elements are read right here.
-        /// </summary>
-        private void OnModelChanged(DocumentId document, ModelChanges changes)
+        private void HandleNumberingHistoryChanged(HistoryChange change)
         {
-            // Our own write raises an event per element; the category is read again after it.
-            if (_runner.IsExecuting || Data == null || !document.Equals(WindowDocument.Id))
+            if (!IsWindowDocumentActive)
             {
                 return;
             }
 
-            SafeRunner.Run(_log, "ModelChanged", () =>
+            // A posted call reads the model itself when it runs.
+            if (IsBusy)
             {
-                var touched = new HashSet<long>(changes.Deleted);
-                touched.UnionWith(changes.Added);
-                touched.UnionWith(changes.Modified);
-                int removed = Data.Items.RemoveAll(item => touched.Contains(item.Id));
+                MarkDataMayBeStale();
+                return;
+            }
 
-                // Changed elements are read again; those that left the category are not returned.
-                List<long> toRead = changes.Added.Concat(changes.Modified).ToList();
-                List<NumberingItem> fresh = toRead.Count == 0
-                    ? new List<NumberingItem>()
-                    : _model.ReadItems(document, CategoryKey, toRead);
-                Data.Items.AddRange(fresh);
-
-                if (changes.LevelsChanged)
-                {
-                    Data.Levels = _model.ReadLevels(document);
-                }
-
-                if (removed == 0 && fresh.Count == 0 && !changes.LevelsChanged)
-                {
-                    return;
-                }
-
-                SetData(Data);
-                DataChanged?.Invoke();
-            }, _ => MarkDataMayBeStale());
+            HistoryChanged?.Invoke(change);
+            Refresh();
         }
 
-        /// <summary>A call that waits for Revit belongs to the previous state of documents: cancel it at once.</summary>
-        private void CancelPendingForDocument()
+        private void HandleActiveChanged()
         {
-            if (_runner.IsPending)
+            // Our own call is running (Revit raised the event inside it). It follows the document when it ends.
+            if (IsBusy && !_runner.CancelPending())
             {
-                _cancelledByDocument = true;
-                _runner.CancelPending();
+                return;
             }
+
+            // A posted call belonged to the previous document. It was dropped, and its caller is told.
+            Action after = _after;
+            _after = null;
+            IsBusy = false;
+            FollowActiveDocument();
+            StateChanged?.Invoke();
+            after?.Invoke();
         }
 
         private sealed class CategoryPick
