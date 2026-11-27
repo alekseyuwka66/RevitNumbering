@@ -374,7 +374,6 @@ FodyWeavers.xsd
 
 # Agent and spec documents (kept locally, not versioned)
 /docs/
-/README.md
 MODELS.md
 CLAUDE.md
 /.claude/
