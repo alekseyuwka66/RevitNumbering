@@ -1,7 +1,87 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
+        <DirectoryRef Id="REVIT2024FOLDER">
+            <Component Id="cmp4791EF6D13F8DD2005CF5A56B04C0286" Guid="{FCA8AA36-D830-4936-8676-0590D0F8A8DC}">
+                <File Id="fil1B7A93E1C2CC7B9877321EA8B1C4A6D2" Source="$(var.BasePath2024)\CommunityToolkit.Mvvm.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp4791EF6D13F8DD2005CF5A56B04C0286" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpA514C63A521199D3F7314CF796D874C6" Guid="{D6BB6498-96FA-4AB8-9870-09B4FEF10996}">
+                <File Id="filB192CF4927A75DD23A91BFA0694DB72E" Source="$(var.BasePath2024)\Microsoft.Bcl.AsyncInterfaces.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpA514C63A521199D3F7314CF796D874C6" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpA3D68D50975AB044950845DBFCFE108B" Guid="{1BE36AEE-66FD-41A3-91AC-AB80B43AEEA9}">
+                <File Id="fil64D3C7D2462CD1BD4A18F4A7D11F7B4E" Source="$(var.BasePath2024)\RevitNumbering.Core.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpA3D68D50975AB044950845DBFCFE108B" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp9C5B42178ECEB3560F61727AD4AD844E" Guid="{23272A32-F96F-4D12-AA90-135DFF2AF8DA}">
+                <File Id="filE7F57B427BD36F29BA01068A03782C80" Source="$(var.BasePath2024)\RevitNumbering.Core.pdb" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp9C5B42178ECEB3560F61727AD4AD844E" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpEE9C30CC77BAB2EB935F50B07BC473A7" Guid="{57A2A3AE-B80F-4247-B332-7A62CEF74544}">
+                <File Id="filAC944B89EB3C111B267F4339131D241F" Source="$(var.BasePath2024)\RevitNumbering.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpEE9C30CC77BAB2EB935F50B07BC473A7" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp9C423E82C50C1AA23ADC078A71D950EE" Guid="{1B37E0F6-E397-4E51-9957-934D0AAEBD88}">
+                <File Id="fil6C56B9A5988E6607C60600CEBFEF32CA" Source="$(var.BasePath2024)\RevitNumbering.pdb" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp9C423E82C50C1AA23ADC078A71D950EE" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp4B9BD52AE6FE670778EF7971E919CFE0" Guid="{19A2A707-9147-4340-8487-A1F826C48B26}">
+                <File Id="filF0F62F2C10C81C4ECFE7817D6ACF803C" Source="$(var.BasePath2024)\RevitNumbering.UI.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp4B9BD52AE6FE670778EF7971E919CFE0" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpB7E62A50D724C681E8BBA722E59B2EFB" Guid="{750F2C66-F188-4F64-B4F1-F246F37BBB57}">
+                <File Id="filFE084A9D8D014BA08A198DF44A336248" Source="$(var.BasePath2024)\RevitNumbering.UI.pdb" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpB7E62A50D724C681E8BBA722E59B2EFB" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpF29FE124A161A55B2BA6FBB7AE6E46F6" Guid="{8DE5B987-9F45-4E20-A0F2-4E9180306B2F}">
+                <File Id="filC0E902C8FBDA41F57793CC866F5DF5BC" Source="$(var.BasePath2024)\RevitStartup.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpF29FE124A161A55B2BA6FBB7AE6E46F6" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp17E4AA57B7BA48FC1260F5DDB7B4FE89" Guid="{FA70F53A-4E9D-4D7F-BFE9-47108AC685D0}">
+                <File Id="fil43CDF557EC746492F7A85A49F39C3F5F" Source="$(var.BasePath2024)\RevitStartup.pdb" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp17E4AA57B7BA48FC1260F5DDB7B4FE89" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp37C8D4CD5820B9215EB09D36820A687A" Guid="{1B604655-2E4F-4DBB-AF82-CF256F90FF3E}">
+                <File Id="fil7FBB3305EB93BC64B98C12F0D8DB3455" Source="$(var.BasePath2024)\System.Buffers.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp37C8D4CD5820B9215EB09D36820A687A" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp58CFE2D4084B26628911650008949FA6" Guid="{8D554AE2-E0AD-44FB-9022-3D037C449929}">
+                <File Id="fil37166E800E5AF7F15ACA81DDC871259C" Source="$(var.BasePath2024)\System.ComponentModel.Annotations.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp58CFE2D4084B26628911650008949FA6" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp3CB95F20C9E06835AB727AAFFACCD4DA" Guid="{3C116086-810B-4738-9E61-43EDFA94D1EA}">
+                <File Id="fil1A0E3BEBD60D0C1E2659D9225F64A90B" Source="$(var.BasePath2024)\System.Memory.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp3CB95F20C9E06835AB727AAFFACCD4DA" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp10C2365ED4D728C271A5D6A9ADD3D7FE" Guid="{1B98E7F5-8AA3-48CE-BCEC-F13F12391084}">
+                <File Id="fil06E60CDE4CFA18C5321D79E16B6B8157" Source="$(var.BasePath2024)\System.Numerics.Vectors.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp10C2365ED4D728C271A5D6A9ADD3D7FE" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp8AE2CFA4DD52EBB2DE9D6A904AE83C57" Guid="{8F54D64C-54B6-41C6-AD85-D9BD6873792E}">
+                <File Id="fil31031D76723787590526010E3FF8B819" Source="$(var.BasePath2024)\System.Runtime.CompilerServices.Unsafe.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp8AE2CFA4DD52EBB2DE9D6A904AE83C57" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpCC5D0F1B158F5E8B0953D0E9C7BD5591" Guid="{50A0F6B4-C076-4E44-9739-24CAF01CCBB5}">
+                <File Id="filE3EAC87B67BD6B150D4414A17FE16DB0" Source="$(var.BasePath2024)\System.Text.Encodings.Web.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpCC5D0F1B158F5E8B0953D0E9C7BD5591" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmp4ED7FF6A26E9ADF6CE6D4A7AF314C23B" Guid="{FB4E36B1-6041-4140-8ACE-8EBDC03E43C7}">
+                <File Id="filB7E2355C04B7C2D1E9DA1B9F974D8C86" Source="$(var.BasePath2024)\System.Text.Json.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmp4ED7FF6A26E9ADF6CE6D4A7AF314C23B" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpF25FD0C9AFD4C2E8CA0F5F15943A62C2" Guid="{94212E16-F4B1-4AF3-BFFA-8D30CB64C88D}">
+                <File Id="filD16504FFD4A13DDADB80CC5AFF4D80D7" Source="$(var.BasePath2024)\System.Threading.Tasks.Extensions.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpF25FD0C9AFD4C2E8CA0F5F15943A62C2" Type="integer" Value="1" KeyPath="yes" /></Component>
+            <Component Id="cmpA2C76DA0FC845BD143B7D906A78E9358" Guid="{1D55B744-9106-4463-833C-E626FE1A076F}">
+                <File Id="fil21E7747248E4AF7D128E37260FAE49E6" Source="$(var.BasePath2024)\System.ValueTuple.dll" />
+            <RegistryValue Root="HKCU" Key="Software\RevitNumbering\Components" Name="cmpA2C76DA0FC845BD143B7D906A78E9358" Type="integer" Value="1" KeyPath="yes" /></Component>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
         <ComponentGroup Id="PublishedComponentsRevit2024">
+            <ComponentRef Id="cmp4791EF6D13F8DD2005CF5A56B04C0286" />
+            <ComponentRef Id="cmpA514C63A521199D3F7314CF796D874C6" />
+            <ComponentRef Id="cmpA3D68D50975AB044950845DBFCFE108B" />
+            <ComponentRef Id="cmp9C5B42178ECEB3560F61727AD4AD844E" />
+            <ComponentRef Id="cmpEE9C30CC77BAB2EB935F50B07BC473A7" />
+            <ComponentRef Id="cmp9C423E82C50C1AA23ADC078A71D950EE" />
+            <ComponentRef Id="cmp4B9BD52AE6FE670778EF7971E919CFE0" />
+            <ComponentRef Id="cmpB7E62A50D724C681E8BBA722E59B2EFB" />
+            <ComponentRef Id="cmpF29FE124A161A55B2BA6FBB7AE6E46F6" />
+            <ComponentRef Id="cmp17E4AA57B7BA48FC1260F5DDB7B4FE89" />
+            <ComponentRef Id="cmp37C8D4CD5820B9215EB09D36820A687A" />
+            <ComponentRef Id="cmp58CFE2D4084B26628911650008949FA6" />
+            <ComponentRef Id="cmp3CB95F20C9E06835AB727AAFFACCD4DA" />
+            <ComponentRef Id="cmp10C2365ED4D728C271A5D6A9ADD3D7FE" />
+            <ComponentRef Id="cmp8AE2CFA4DD52EBB2DE9D6A904AE83C57" />
+            <ComponentRef Id="cmpCC5D0F1B158F5E8B0953D0E9C7BD5591" />
+            <ComponentRef Id="cmp4ED7FF6A26E9ADF6CE6D4A7AF314C23B" />
+            <ComponentRef Id="cmpF25FD0C9AFD4C2E8CA0F5F15943A62C2" />
+            <ComponentRef Id="cmpA2C76DA0FC845BD143B7D906A78E9358" />
         </ComponentGroup>
     </Fragment>
 </Wix>
