@@ -19,86 +19,78 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Top line: category, scope, picking in the model, search -->
             <Grid Grid.Row="0" Margin="0,0,0,8" IsEnabled="{Binding CanEdit}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="{x:Static res:Texts.LabelCategory}" VerticalAlignment="Center" />
                 <ComboBox Grid.Column="1" Width="150" Margin="6,0,16,0"
                           ItemsSource="{Binding Categories}" DisplayMemberPath="Title"
                           SelectedItem="{Binding SelectedCategory}" />
-                <TextBlock Grid.Column="2" Text="{Binding ScopeText}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBlock Grid.Column="2" Text="{Binding ScopeText}" VerticalAlignment="Center" Margin="0,0,12,0"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding ScopeText}" />
                 <Button Grid.Column="3" Content="{x:Static res:Texts.ButtonPick}"
                         Command="{Binding PickCommand}" IsEnabled="{Binding CanPick}" />
-                <Button Grid.Column="4" Content="{x:Static res:Texts.ButtonResetPick}"
+                <Button Grid.Column="4" Content="{x:Static res:Texts.ButtonResetPick}" Margin="0"
                         Command="{Binding ResetPickCommand}" IsEnabled="{Binding HasPick}" />
-                <TextBlock Grid.Column="6" Text="{x:Static res:Texts.LabelSearch}" VerticalAlignment="Center"
-                           Margin="0,0,6,0" />
-                <TextBox Grid.Column="7" VerticalContentAlignment="Center"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
 
-            <!-- Table on the left, settings of the category on the right -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="330" />
+                    <ColumnDefinition Width="360" />
                 </Grid.ColumnDefinitions>
                 <views:ElementsTable Grid.Column="0" />
-                <views:CategorySettingsPanel Grid.Column="1" Margin="10,0,0,0"
-                                             DataContext="{Binding Settings}"
-                                             IsEnabled="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}}" />
+                <DockPanel Grid.Column="1" Margin="10,0,0,0">
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,4,14" IsEnabled="{Binding CanEdit}">
+                        <TextBlock Text="{x:Static res:Texts.LabelSearch}" FontWeight="SemiBold" />
+                        <TextBox Margin="0,6,0,0" Height="24" VerticalContentAlignment="Center"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=50}" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <RadioButton Grid.Column="0" GroupName="SearchMode" VerticalAlignment="Center"
+                                         Margin="0,0,16,0" Content="{x:Static res:Texts.SearchAllTable}"
+                                         IsChecked="{Binding IsSearchAll}" />
+                            <RadioButton Grid.Column="1" GroupName="SearchMode" VerticalAlignment="Center"
+                                         Margin="0,0,8,0" Content="{x:Static res:Texts.SearchByColumn}"
+                                         IsChecked="{Binding IsSearchByColumn}" />
+                            <ComboBox Grid.Column="2" ItemsSource="{Binding SearchColumns}" DisplayMemberPath="Title"
+                                      SelectedItem="{Binding SelectedSearchColumn}"
+                                      IsEnabled="{Binding IsSearchByColumn}" />
+                        </Grid>
+                    </StackPanel>
+                    <views:CategorySettingsPanel DataContext="{Binding Settings}"
+                                                 IsEnabled="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </DockPanel>
             </Grid>
 
-            <!-- Bottom buttons -->
             <Grid Grid.Row="2" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="{x:Static res:Texts.ButtonImport}"
-                        Command="{Binding ImportCommand}" IsEnabled="{Binding CanEdit}" />
-                <Button Grid.Column="1" Content="{x:Static res:Texts.ButtonExport}"
-                        Command="{Binding ExportCommand}" IsEnabled="{Binding CanEdit}" />
-                <Button Grid.Column="2" Content="{x:Static res:Texts.ButtonSave}"
-                        Command="{Binding SaveCommand}" IsEnabled="{Binding CanEdit}" />
-                <Button Grid.Column="4" Content="{x:Static res:Texts.ButtonRefresh}"
-                        Command="{Binding RefreshCommand}" IsEnabled="{Binding CanRefresh}"
-                        Visibility="{Binding IsRefreshVisible, Converter={StaticResource BoolToVisibility}}" />
-                <Grid Grid.Column="5">
-                    <Button Content="{x:Static res:Texts.ButtonApply}" MinWidth="110" Margin="0" FontWeight="SemiBold"
-                            Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}"
-                            Visibility="{Binding IsApplyVisible, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" TextWrapping="Wrap"
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                    <Button Content="{x:Static res:Texts.ButtonRefresh}"
+                            Command="{Binding RefreshCommand}" IsEnabled="{Binding CanRefresh}"
+                            Visibility="{Binding IsRefreshVisible, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Content="{x:Static res:Texts.ButtonApply}" MinWidth="110"
+                            Command="{Binding ApplyCommand}" IsEnabled="{Binding CanApply}" />
                     <Button Content="{x:Static res:Texts.ButtonCancel}" MinWidth="110" Margin="0"
-                            Command="{Binding CancelCommand}"
-                            Visibility="{Binding IsCancelVisible, Converter={StaticResource BoolToVisibility}}" />
-                </Grid>
+                            Command="{Binding CancelCommand}" IsEnabled="{Binding CanCancel}" />
+                </StackPanel>
             </Grid>
-
-            <!-- Status line -->
-            <TextBlock Grid.Row="3" Text="{Binding StatusText}" TextWrapping="Wrap" Margin="0,8,0,0" MinHeight="16" />
         </Grid>
-
-        <!-- Incomplete embedded defaults: the window must not work -->
-        <Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
-                Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVisibility}}">
-            <TextBlock Text="{Binding BlockedText}" TextWrapping="Wrap" Foreground="#C00000" FontSize="14"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" />
-        </Border>
     </Grid>
 </Window>

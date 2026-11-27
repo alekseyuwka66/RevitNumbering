@@ -3,15 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:RevitNumbering.UI.Resources"
         Title="{x:Static res:Texts.ErrorTitle}"
-        Width="480" SizeToContent="Height" ResizeMode="NoResize"
-        ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
-    <StackPanel Margin="16">
-        <TextBlock Text="{x:Static res:Texts.ErrorMessage}" TextWrapping="Wrap" FontSize="13" />
-        <TextBlock x:Name="CopyResult" TextWrapping="Wrap" Foreground="Gray" Margin="0,10,0,0" />
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+        Width="480" SizeToContent="Height" MinWidth="360" MinHeight="190"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip">
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button Content="{x:Static res:Texts.ButtonCopyLog}" Click="OnCopyLogClick" Padding="12,3" />
             <Button Content="{x:Static res:Texts.ButtonClose}" IsDefault="True" IsCancel="True" MinWidth="90"
                     Padding="12,3" Margin="8,0,0,0" />
         </StackPanel>
-    </StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="{x:Static res:Texts.ErrorMessage}" TextWrapping="Wrap" FontSize="13" />
+                <TextBlock x:Name="CopyResult" TextWrapping="Wrap" Foreground="Gray" Margin="0,10,0,0" />
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
 </Window>

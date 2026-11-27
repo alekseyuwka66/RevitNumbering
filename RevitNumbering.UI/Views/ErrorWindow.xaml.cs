@@ -5,10 +5,8 @@ using RevitNumbering.UI.Resources;
 
 namespace RevitNumbering.UI.Views
 {
-    /// <summary>
-    /// The window of an unexpected error. "Copy log" puts the log file itself on the clipboard,
-    /// so that the user pastes it into a mail or a messenger as an attachment.
-    /// </summary>
+    // The window of an unexpected error. "Copy log" puts the log file itself on the clipboard,
+    // so the user can attach it to a mail or a message.
     public partial class ErrorWindow : Window
     {
         private readonly string _logFilePath;
@@ -23,7 +21,7 @@ namespace RevitNumbering.UI.Views
         {
             try
             {
-                // A copy: the log file itself may be written to at any moment.
+                // Copy the file: the log file itself may be written at any moment.
                 string folder = Path.Combine(Path.GetTempPath(), "RevitNumbering");
                 Directory.CreateDirectory(folder);
                 string copy = Path.Combine(folder, Path.GetFileName(_logFilePath));
@@ -33,7 +31,7 @@ namespace RevitNumbering.UI.Views
             }
             catch (Exception)
             {
-                // No log, no access, a busy clipboard: the user still gets the path of the log.
+                // No log, no access or a busy clipboard: the user still gets the path of the log.
                 CopyResult.Text = string.Format(Texts.ErrorLogNotCopied, _logFilePath);
             }
         }

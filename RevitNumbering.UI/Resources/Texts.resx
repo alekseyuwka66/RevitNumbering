@@ -73,17 +73,11 @@
   <data name="ButtonResetPick" xml:space="preserve">
     <value>Сбросить выбор</value>
   </data>
-  <data name="ButtonImport" xml:space="preserve">
-    <value>Импорт</value>
-  </data>
-  <data name="ButtonExport" xml:space="preserve">
-    <value>Экспорт</value>
-  </data>
-  <data name="ButtonSave" xml:space="preserve">
-    <value>Сохранить конфигурацию</value>
-  </data>
   <data name="ButtonRefresh" xml:space="preserve">
     <value>Обновить</value>
+  </data>
+  <data name="ButtonZoom" xml:space="preserve">
+    <value>Показать</value>
   </data>
   <data name="ButtonApply" xml:space="preserve">
     <value>Применить</value>
@@ -182,7 +176,7 @@
     <value>Загрузка…</value>
   </data>
   <data name="PlaceholderNoData" xml:space="preserve">
-    <value>Данные не загружены — нажмите «Обновить»</value>
+    <value>Данные не загружены - нажмите «Обновить»</value>
   </data>
   <data name="ScopeVisible" xml:space="preserve">
     <value>Охват: видимые в таблице ({0})</value>
@@ -194,43 +188,43 @@
     <value>Изменится: {0} · Зафиксировано: {1} · Пропущено занятых номеров: {2}</value>
   </data>
   <data name="SkippedHint" xml:space="preserve">
-    <value>Номера {0} заняты элементами вне охвата или зафиксированными — выданы следующие свободные. Чтобы перенумеровать полностью, выберите охват всего уровня.</value>
-  </data>
-  <data name="SkippedRange" xml:space="preserve">
-    <value>{0} … {1}</value>
-  </data>
-  <data name="SkippedMore" xml:space="preserve">
-    <value>и ещё {0}</value>
+    <value>Часть номеров занята другими элементами.</value>
   </data>
   <data name="LabelTemplate" xml:space="preserve">
     <value>Шаблон номера</value>
   </data>
-  <data name="TemplateHint" xml:space="preserve">
-    <value>Подстановки: {Уровень} или {Level} — код уровня; {N} — порядковый номер; {N:000} — номер с ведущими нулями (число нулей — разрядность). Остальной текст копируется как есть.</value>
+  <data name="LabelPrefix" xml:space="preserve">
+    <value>Префикс</value>
   </data>
-  <data name="LabelLevelCode" xml:space="preserve">
-    <value>Код уровня (из имени уровня)</value>
+  <data name="LabelLevel" xml:space="preserve">
+    <value>Уровень</value>
   </data>
-  <data name="LevelCodePart_Whole" xml:space="preserve">
-    <value>Имя целиком</value>
+  <data name="LabelSeparator" xml:space="preserve">
+    <value>Разделитель</value>
   </data>
-  <data name="LevelCodePart_Word" xml:space="preserve">
-    <value>Слово с номером</value>
+  <data name="LabelWidth" xml:space="preserve">
+    <value>Разрядность</value>
   </data>
-  <data name="LevelCodePart_LastWord" xml:space="preserve">
-    <value>Последнее слово</value>
+  <data name="LabelSuffix" xml:space="preserve">
+    <value>Суффикс</value>
   </data>
-  <data name="LabelWordNumber" xml:space="preserve">
-    <value>Номер слова</value>
+  <data name="ButtonSwap" xml:space="preserve">
+    <value>Поменять местами</value>
   </data>
-  <data name="LevelCodeHint" xml:space="preserve">
-    <value>Слова в имени уровня разделяются пробелом и знаком «_».</value>
+  <data name="LabelExample" xml:space="preserve">
+    <value>Пример:</value>
+  </data>
+  <data name="ExampleLevel" xml:space="preserve">
+    <value>01</value>
+  </data>
+  <data name="HintWidth" xml:space="preserve">
+    <value>Минимум цифр в номере: 1 - без нулей, 3 - 001, 002…</value>
   </data>
   <data name="LabelOrdering" xml:space="preserve">
     <value>Порядок нумерации</value>
   </data>
   <data name="Ordering_Grid" xml:space="preserve">
-    <value>Сетка: рядами или столбцами от угла</value>
+    <value>Сетка</value>
   </data>
   <data name="LabelCorner" xml:space="preserve">
     <value>Начальный угол</value>
@@ -259,47 +253,17 @@
   <data name="LabelRowTolerance" xml:space="preserve">
     <value>Допуск ряда, мм</value>
   </data>
-  <data name="RowToleranceHint" xml:space="preserve">
-    <value>Элементы, смещённые поперёк ряда не больше допуска, считаются одним рядом. Ориентация — по осям модели: «сверху» — больший Y, «слева» — меньший X.</value>
-  </data>
   <data name="ValidationRange" xml:space="preserve">
     <value>Введите целое число от {0} до {1}</value>
   </data>
-  <data name="Problem_UnclosedBrace" xml:space="preserve">
-    <value>Фигурная скобка без пары</value>
-  </data>
-  <data name="Problem_UnknownPlaceholder" xml:space="preserve">
-    <value>Неизвестная подстановка {0}</value>
-  </data>
-  <data name="Problem_NoNumber" xml:space="preserve">
-    <value>В шаблоне нет порядкового номера {{N}}</value>
-  </data>
-  <data name="Problem_BadWidth" xml:space="preserve">
-    <value>Неверная разрядность {0}: после двоеточия — только нули, от 1 до 9, одинаково во всех номерах шаблона</value>
-  </data>
   <data name="Problem_NeedLevel" xml:space="preserve">
-    <value>В охвате несколько уровней ({0}), а в шаблоне нет {{Уровень}} — номера на разных уровнях совпадут</value>
+    <value>В охвате несколько уровней ({1}), а уровень не входит в номер - номера на разных уровнях совпадут. Включите «Уровень»</value>
   </data>
-  <data name="Problem_LevelPartMissing" xml:space="preserve">
-    <value>В имени уровня нет выбранной части: {0}</value>
+  <data name="Problem_DuplicateNumber" xml:space="preserve">
+    <value>Номер {0} получается сразу на нескольких уровнях ({1}) - добавьте разделитель между уровнем и номером</value>
   </data>
-  <data name="Problem_DuplicateInScope" xml:space="preserve">
-    <value>Номер {0} получается сразу на нескольких уровнях ({1}) — у них одинаковый код уровня</value>
-  </data>
-  <data name="Problem_WidthTooSmall" xml:space="preserve">
-    <value>Номер {0} длиннее разрядности ({1}) — номера будут разной длины</value>
-  </data>
-  <data name="Problem_DefaultsUnreadable" xml:space="preserve">
-    <value>Встроенные настройки по умолчанию не читаются</value>
-  </data>
-  <data name="Problem_DefaultsCategoryMissing" xml:space="preserve">
-    <value>Во встроенных настройках по умолчанию нет записи категории «{0}»</value>
-  </data>
-  <data name="Problem_DefaultsCategoryInvalid" xml:space="preserve">
-    <value>Во встроенных настройках по умолчанию неверная запись категории «{0}»</value>
-  </data>
-  <data name="StartupBlocked" xml:space="preserve">
-    <value>Плагин собран с ошибкой и не может работать. Сообщите разработчику:</value>
+  <data name="WidthTooSmall" xml:space="preserve">
+    <value>Номер {0} длиннее разрядности - номера будут разной длины</value>
   </data>
   <data name="StatusLoading" xml:space="preserve">
     <value>Загрузка…</value>
@@ -310,71 +274,38 @@
   <data name="StatusWriting" xml:space="preserve">
     <value>Записываю элементов: {0}…</value>
   </data>
+  <data name="StatusWriteProgress" xml:space="preserve">
+    <value>Записано {0} из {1}…</value>
+  </data>
+  <data name="StatusStopping" xml:space="preserve">
+    <value>Отмена нумерации - откатываю изменения…</value>
+  </data>
   <data name="StatusWritten" xml:space="preserve">
     <value>Записано: {0}, не записано: {1}</value>
   </data>
   <data name="StatusDataChanged" xml:space="preserve">
-    <value>Данные в модели изменились — проверьте новые значения и нажмите «Применить» ещё раз. Ничего не записано.</value>
+    <value>Данные в модели изменились - проверьте новые значения и нажмите «Применить» еще раз. Ничего не записано.</value>
   </data>
   <data name="StatusDocumentChanged" xml:space="preserve">
     <value>Нумерация не выполнена: активный документ сменился</value>
   </data>
   <data name="StatusCancelled" xml:space="preserve">
-    <value>Запрос отменён</value>
-  </data>
-  <data name="StatusRevitBusy" xml:space="preserve">
-    <value>Revit занят — ожидание</value>
-  </data>
-  <data name="StatusOtherDocument" xml:space="preserve">
-    <value>Активен другой документ — нажмите «Обновить», чтобы загрузить его</value>
+    <value>Нумерация отменена. Изменения откачены, ничего не записано.</value>
   </data>
   <data name="StatusStale" xml:space="preserve">
-    <value>Данные могли устареть — нажмите «Обновить»</value>
+    <value>Данные могли устареть - нажмите «Обновить»</value>
   </data>
-  <data name="StatusSaved" xml:space="preserve">
-    <value>Конфигурация сохранена</value>
+  <data name="SettingsUnreadable" xml:space="preserve">
+    <value>Файл настроек поврежден или не читается: {0}. Загружены настройки по умолчанию; файл не перезаписывается - исправьте или удалите его, чтобы настройки снова сохранялись.</value>
   </data>
-  <data name="StatusExported" xml:space="preserve">
-    <value>Конфигурация экспортирована: {0}</value>
-  </data>
-  <data name="SettingsNotice_FileCorrupted" xml:space="preserve">
-    <value>Файл настроек повреждён или не читается. Загружены настройки по умолчанию, копия файла сохранена: {0}</value>
-  </data>
-  <data name="SettingsNotice_CategoriesReset" xml:space="preserve">
+  <data name="SettingsCategoriesReset" xml:space="preserve">
     <value>Настройки категорий не прочитаны и заменены настройками по умолчанию: {0}</value>
   </data>
-  <data name="SettingsNotice_NewerSchema" xml:space="preserve">
-    <value>Файл настроек создан более новой версией плагина: он прочитан, но сохранение в него отключено</value>
-  </data>
-  <data name="SettingsNotice_SaveFailed" xml:space="preserve">
-    <value>Не удалось записать файл: {0}</value>
-  </data>
-  <data name="ImportResult_Imported" xml:space="preserve">
-    <value>Конфигурация импортирована; прежний файл настроек сохранён с расширением .bak</value>
-  </data>
-  <data name="ImportResult_Unreadable" xml:space="preserve">
-    <value>Файл не читается — конфигурация не изменена</value>
-  </data>
-  <data name="ImportResult_Invalid" xml:space="preserve">
-    <value>Файл не является конфигурацией нумерации или содержит неверные настройки — конфигурация не изменена</value>
-  </data>
-  <data name="ImportResult_NewerSchema" xml:space="preserve">
-    <value>Файл создан более новой версией плагина — конфигурация не изменена</value>
-  </data>
-  <data name="ImportResult_SaveFailed" xml:space="preserve">
-    <value>Не удалось заменить файл настроек — конфигурация не изменена</value>
-  </data>
-  <data name="AskSave" xml:space="preserve">
-    <value>Настройки нумерации изменены. Сохранить конфигурацию?</value>
-  </data>
-  <data name="JsonFilter" xml:space="preserve">
-    <value>Конфигурация нумерации (*.json)|*.json</value>
-  </data>
-  <data name="ExportFileName" xml:space="preserve">
-    <value>numbering-settings.json</value>
+  <data name="SettingsSaveFailed" xml:space="preserve">
+    <value>Не удалось записать файл настроек. Подробности записаны в журнал: {0}</value>
   </data>
   <data name="SummaryTitle" xml:space="preserve">
-    <value>Нумерация элементов — итог</value>
+    <value>Нумерация элементов - результат</value>
   </data>
   <data name="SummaryWritten" xml:space="preserve">
     <value>Записано: {0}</value>
@@ -383,37 +314,34 @@
     <value>Не записано: {0}</value>
   </data>
   <data name="SummaryLine" xml:space="preserve">
-    <value>{0}, {1} — {2}</value>
-  </data>
-  <data name="SummaryUndoHint" xml:space="preserve">
-    <value>Всю нумерацию отменяет одна команда «Отменить» (Ctrl+Z) в Revit.</value>
+    <value>{0}, {1} - {2}</value>
   </data>
   <data name="WriteFail_Deleted" xml:space="preserve">
-    <value>элемент удалён</value>
+    <value>элемент удален</value>
   </data>
   <data name="WriteFail_OwnedByOther" xml:space="preserve">
     <value>занят пользователем {0}</value>
   </data>
   <data name="WriteFail_NotUpToDate" xml:space="preserve">
-    <value>элемент устарел — обновите модель до последней версии</value>
+    <value>элемент устарел - обновите модель до последней версии</value>
   </data>
   <data name="WriteFail_ReadOnly" xml:space="preserve">
     <value>параметр только для чтения</value>
   </data>
   <data name="WriteFail_Rejected" xml:space="preserve">
-    <value>Revit не принял значение</value>
+    <value>Revit не принял значение: {0}</value>
   </data>
   <data name="WriteFail_RolledBack" xml:space="preserve">
     <value>Revit отменил изменение: {0}</value>
   </data>
   <data name="ErrorTitle" xml:space="preserve">
-    <value>Нумерация элементов — ошибка</value>
+    <value>Нумерация элементов - ошибка</value>
   </data>
   <data name="ErrorMessage" xml:space="preserve">
     <value>Произошла непредвиденная ошибка. Подробности записаны в журнал. Отправьте журнал разработчику.</value>
   </data>
   <data name="ErrorLogCopied" xml:space="preserve">
-    <value>Файл журнала скопирован в буфер обмена — вставьте его в письмо или сообщение.</value>
+    <value>Файл журнала скопирован в буфер обмена - вставьте его в письмо или сообщение.</value>
   </data>
   <data name="ErrorLogNotCopied" xml:space="preserve">
     <value>Не удалось скопировать журнал. Файл журнала: {0}</value>
@@ -424,7 +352,34 @@
   <data name="OpenFailed" xml:space="preserve">
     <value>Не удалось открыть окно нумерации. Подробности записаны в журнал: {0}</value>
   </data>
+  <data name="TransactionName" xml:space="preserve">
+    <value>Нумерация элементов</value>
+  </data>
   <data name="PluginNotStarted" xml:space="preserve">
     <value>Плагин нумерации не запущен: при запуске Revit произошла ошибка. Перезапустите Revit; если ошибка повторится, отправьте разработчику журнал из папки %LOCALAPPDATA%\RevitNumbering.</value>
+  </data>
+  <data name="SearchAllTable" xml:space="preserve">
+    <value>Вся таблица</value>
+  </data>
+  <data name="SearchByColumn" xml:space="preserve">
+    <value>Столбец</value>
+  </data>
+  <data name="ScopeNone" xml:space="preserve">
+    <value>Охват: не задан</value>
+  </data>
+  <data name="ScopePickedFound" xml:space="preserve">
+    <value>Охват: выбранные в модели ({0}), найдено по поиску ({1})</value>
+  </data>
+  <data name="StatusUndone" xml:space="preserve">
+    <value>Нумерация отменена в Revit - таблица обновлена</value>
+  </data>
+  <data name="StatusRedone" xml:space="preserve">
+    <value>Нумерация повторена в Revit - таблица обновлена</value>
+  </data>
+  <data name="RowStatus_OutOfScopeHolder" xml:space="preserve">
+    <value> Занимает номер: вне охвата</value>
+  </data>
+  <data name="RowStatus_LockedHolder" xml:space="preserve">
+    <value> Занимает номер: зафиксирован ({0})</value>
   </data>
 </root>

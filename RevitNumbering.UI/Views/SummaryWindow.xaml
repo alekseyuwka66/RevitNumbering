@@ -3,31 +3,21 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:RevitNumbering.UI.Resources"
         Title="{x:Static res:Texts.SummaryTitle}"
-        Width="560" SizeToContent="Height" MaxHeight="600" MinWidth="380"
+        Width="560" SizeToContent="Height" MaxHeight="600" MinWidth="380" MinHeight="220"
         ShowInTaskbar="False" WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
-    <Grid Margin="14">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="{Binding WrittenText}" FontSize="14" FontWeight="SemiBold" />
-        <TextBlock Grid.Row="1" Text="{Binding NotWrittenText}" Margin="0,10,0,4"
+    <DockPanel Margin="14">
+        <Button DockPanel.Dock="Bottom" Content="{x:Static res:Texts.ButtonClose}" IsDefault="True" IsCancel="True"
+                HorizontalAlignment="Right" MinWidth="90" Padding="12,3" Margin="0,12,0,0" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding WrittenText}" TextWrapping="Wrap" FontSize="14"
+                   FontWeight="SemiBold" />
+        <TextBlock DockPanel.Dock="Top" Text="{Binding NotWrittenText}" TextWrapping="Wrap" Margin="0,10,0,4"
                    Visibility="{Binding HasFailures, Converter={StaticResource BoolToVisibility}}" />
 
-        <!-- "ID, name — reason" for every element that was not written -->
-        <ListBox Grid.Row="2" ItemsSource="{Binding Failures}" MinHeight="60" MaxHeight="340"
+        <ListBox ItemsSource="{Binding Failures}" MinHeight="40"
                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
                  Visibility="{Binding HasFailures, Converter={StaticResource BoolToVisibility}}" />
-
-        <TextBlock Grid.Row="3" Text="{x:Static res:Texts.SummaryUndoHint}" TextWrapping="Wrap" Foreground="Gray"
-                   Margin="0,10,0,0" />
-        <Button Grid.Row="4" Content="{x:Static res:Texts.ButtonClose}" IsDefault="True" IsCancel="True"
-                HorizontalAlignment="Right" MinWidth="90" Padding="12,3" Margin="0,12,0,0" />
-    </Grid>
+    </DockPanel>
 </Window>

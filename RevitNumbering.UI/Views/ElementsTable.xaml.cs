@@ -1,10 +1,7 @@
 using System.Windows.Controls;
-using System.Windows.Input;
-using RevitNumbering.UI.ViewModels;
 
 namespace RevitNumbering.UI.Views
 {
-    /// <summary>The table of elements with its empty states, counters and the hint about skipped numbers.</summary>
     public partial class ElementsTable : UserControl
     {
         public ElementsTable()
@@ -12,13 +9,10 @@ namespace RevitNumbering.UI.Views
             InitializeComponent();
         }
 
-        /// <summary>A mouse click on a row: the command zooms to the element in Revit.</summary>
-        private void OnRowMouseUp(object sender, MouseButtonEventArgs e)
+        // The table only shows data: nothing stays selected.
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is DataGridRow row && row.Item is TableRow tableRow && DataContext is MainViewModel viewModel)
-            {
-                viewModel.ShowElementCommand.Execute(tableRow);
-            }
+            ((DataGrid)sender).UnselectAll();
         }
     }
 }

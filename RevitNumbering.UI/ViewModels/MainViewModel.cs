@@ -12,100 +12,93 @@ using RevitNumbering.UI.Views;
 
 namespace RevitNumbering.UI.ViewModels
 {
-    /// <summary>
-    /// The model of the main window. Works only with the coordinator; every command goes through SafeRunner,
-    /// because an exception that leaves a command would bring Revit down.
-    /// </summary>
-    public sealed class MainViewModel : ObservableObject
+    // The model of the main window. It works only with the session.
+    // Every command runs through SafeRunner, because an exception that leaves a command would bring Revit down.
+    public sealed partial class MainViewModel : ObservableObject
     {
-        private const int MaxHintRanges = 5;
-        private static readonly TimeSpan RevitBusyDelay = TimeSpan.FromSeconds(1);
         private static readonly IReadOnlyList<TableRow> NoRows = new List<TableRow>();
 
         private readonly NumberingSession _session;
-        private readonly ILog _log;
-        private readonly DispatcherTimer _waitTimer;
-        private readonly List<SettingsNotice> _pendingNotices = new List<SettingsNotice>();
+        private readonly FileLog _log;
 
         private IReadOnlyList<TableRow> _rows = NoRows;
-        private string _searchText = string.Empty;
-        private string _statusText = string.Empty;
-        private bool _isOpened;
-        private bool _isBusy;
-        private bool _isWaitingForRevit;
-        private bool _cancelRequested;
 
-        public MainViewModel(NumberingSession session, ILog log)
+        // Rows are filtered on every change of the text.
+        [ObservableProperty]
+        private string _searchText = string.Empty;
+
+        [ObservableProperty]
+        private string _statusText = string.Empty;
+
+        [ObservableProperty]
+        private bool _isSearchByColumn;
+
+        [ObservableProperty]
+        private Option<SearchColumn> _selectedSearchColumn;
+
+        // The result of the last operation. It stays in the status line until the next operation.
+        private string _message = string.Empty;
+
+        private bool _scopeCleared;
+
+        private bool _clearingSearch;
+
+        public MainViewModel(NumberingSession session, FileLog log)
         {
             _session = session;
             _log = log;
-            _waitTimer = new DispatcherTimer { Interval = RevitBusyDelay };
-            _waitTimer.Tick += OnWaitTimerTick;
 
             Categories = session.CategoryKeys
                 .Select(key => new Option<string>(key, TextLookup.Category(key)))
                 .ToList();
+            SearchColumns = new List<Option<SearchColumn>>
+            {
+                new Option<SearchColumn>(SearchColumn.Id, Texts.ColumnId),
+                new Option<SearchColumn>(SearchColumn.Name, Texts.ColumnName),
+                new Option<SearchColumn>(SearchColumn.Level, Texts.ColumnLevel),
+                new Option<SearchColumn>(SearchColumn.Current, Texts.ColumnCurrent),
+            };
+            _selectedSearchColumn = SearchColumns[0];
             Settings = new CategorySettingsViewModel();
+            Settings.Attach(session.Settings);
             Settings.Changed += OnSettingsChanged;
 
             _session.DataChanged += OnDataChanged;
-            _session.DocumentStateChanged += OnDocumentStateChanged;
-            _session.SettingsNotice += OnSettingsNotice;
-
-            OpenCommand = Async("Open", OpenAsync);
-            PickCommand = Async("Pick", PickAsync);
-            ResetPickCommand = Sync("ResetPick", () => _session.ResetPick());
-            RefreshCommand = Async("Refresh", RefreshAsync);
-            ApplyCommand = Async("Apply", ApplyAsync);
-            CancelCommand = Sync("Cancel", Cancel);
-            SaveCommand = Sync("Save", Save);
-            ExportCommand = Sync("Export", Export);
-            ImportCommand = Sync("Import", Import);
-            ShowElementCommand = new AsyncRelayCommand<TableRow>(row =>
-                SafeRunner.RunAsync(_log, "Show", () => ShowElementAsync(row), OnError));
-
-            // Settings are read before the window is shown: it needs its saved placement.
-            SafeRunner.Run(_log, "Initialize", () =>
-            {
-                _session.Initialize();
-                Settings.Attach(_session.Settings);
-            }, null);
+            _session.StateChanged += OnStateChanged;
+            _session.Failed += OnError;
+            _session.HistoryChanged += OnHistoryChanged;
         }
 
-        /// <summary>Dialogs of the window; set by the window itself.</summary>
+        // The window is hidden while the user picks in the model. It comes back when the call ends.
+        private bool _windowHidden;
+
+        private bool _isWriting;
+
+        private bool _cancelRequested;
+
+        // Set by the window itself.
         public Dialogs Dialogs { get; set; }
-
-        public IAsyncRelayCommand OpenCommand { get; }
-
-        public IAsyncRelayCommand PickCommand { get; }
-
-        public IRelayCommand ResetPickCommand { get; }
-
-        public IAsyncRelayCommand RefreshCommand { get; }
-
-        public IAsyncRelayCommand ApplyCommand { get; }
-
-        public IRelayCommand CancelCommand { get; }
-
-        public IRelayCommand SaveCommand { get; }
-
-        public IRelayCommand ExportCommand { get; }
-
-        public IRelayCommand ImportCommand { get; }
-
-        /// <summary>A mouse click on a row: zoom to the element in Revit and select it.</summary>
-        public IAsyncRelayCommand<TableRow> ShowElementCommand { get; }
 
         public List<Option<string>> Categories { get; }
 
+        public List<Option<SearchColumn>> SearchColumns { get; }
+
+        public bool IsSearchAll
+        {
+            get => !IsSearchByColumn;
+            set
+            {
+                if (value)
+                {
+                    IsSearchByColumn = false;
+                }
+            }
+        }
+
         public CategorySettingsViewModel Settings { get; }
 
-        /// <summary>
-        /// Rows left after the search; the collection is replaced as a whole.
-        /// Empty while a family document or no document is active.
-        /// </summary>
-        public IReadOnlyList<TableRow> Rows =>
-            _session.ActiveDocument.Kind == DocumentKind.Project ? _rows : NoRows;
+        // The collection is replaced as a whole after every recalculation.
+        public IReadOnlyList<TableRow> Rows => _rows;
 
         public Option<string> SelectedCategory
         {
@@ -114,36 +107,15 @@ namespace RevitNumbering.UI.ViewModels
             {
                 if (value != null && value.Value != _session.CategoryKey)
                 {
-                    _ = SafeRunner.RunAsync(_log, "SelectCategory", () => SelectCategoryAsync(value.Value), OnError);
+                    SafeRunner.Run(_log, "SelectCategory", () => SelectCategory(value.Value), OnError);
                 }
             }
         }
 
-        public string SearchText
-        {
-            get => _searchText;
-            set
-            {
-                _searchText = value ?? string.Empty;
-                SafeRunner.Run(_log, "Search", RebuildRows, OnError);
-            }
-        }
+        public bool CanCancel => _isWriting && _session.IsBusy;
 
-        public string StatusText
-        {
-            get => _statusText;
-            private set => SetProperty(ref _statusText, value ?? string.Empty);
-        }
-
-        /// <summary>Not empty: the embedded defaults are incomplete, the window must not work.</summary>
-        public string BlockedText => _session.StartupProblems.Count == 0
-            ? string.Empty
-            : Texts.StartupBlocked + "\n" + string.Join("\n", _session.StartupProblems.Select(TextLookup.Problem));
-
-        public bool IsBlocked => _session.StartupProblems.Count > 0;
-
-        /// <summary>The category, the search and the settings can be edited.</summary>
-        public bool CanEdit => !_isBusy && !IsBlocked;
+        // While a call is posted or running, only Cancel is available.
+        public bool CanEdit => !_session.IsBusy;
 
         public bool CanPick => CanEdit && _session.Data != null && _session.IsWindowDocumentActive;
 
@@ -152,31 +124,17 @@ namespace RevitNumbering.UI.ViewModels
         public bool CanApply => CanEdit && _session.IsWindowDocumentActive
             && _session.Preview != null && _session.Preview.CanApply;
 
-        /// <summary>Revit has not started the call for a second: Cancel replaces Apply.</summary>
-        public bool IsCancelVisible => _isWaitingForRevit;
+        public bool IsRefreshVisible => _session.ActiveDocument.Kind == DocumentKind.Project;
 
-        public bool IsApplyVisible => !_isWaitingForRevit;
+        public bool CanRefresh => CanEdit;
 
-        /// <summary>The active project is not the one in the table, or the table may be stale.</summary>
-        public bool IsRefreshVisible => !IsBlocked
-            && _session.ActiveDocument.Kind == DocumentKind.Project
-            && (!_session.IsWindowDocumentActive || _session.DataMayBeStale);
-
-        public bool CanRefresh => !_isBusy;
-
-        /// <summary>The table shows another document than the active one: it is greyed out.</summary>
+        // The table shows another document than the active one, until the window follows it. It is greyed out.
         public bool IsTableStale => _session.Data != null && !_session.IsWindowDocumentActive;
 
-        /// <summary>Grey text in the middle of the empty table.</summary>
         public string PlaceholderText
         {
             get
             {
-                if (IsBlocked)
-                {
-                    return string.Empty;
-                }
-
                 switch (_session.ActiveDocument.Kind)
                 {
                     case DocumentKind.Family:
@@ -187,7 +145,7 @@ namespace RevitNumbering.UI.ViewModels
 
                 if (_session.Data == null)
                 {
-                    return _isBusy ? Texts.PlaceholderLoading : Texts.PlaceholderNoData;
+                    return _session.IsBusy ? Texts.PlaceholderLoading : Texts.PlaceholderNoData;
                 }
 
                 if (_session.Data.Items.Count == 0)
@@ -203,91 +161,112 @@ namespace RevitNumbering.UI.ViewModels
         {
             get
             {
-                Preview preview = ShownPreview;
+                Preview preview = _session.Preview;
                 if (preview == null)
                 {
                     return string.Empty;
                 }
 
                 int inScope = preview.Rows.Count(row => row.Status != RowStatus.OutOfScope);
-                return string.Format(_session.Picked != null ? Texts.ScopePicked : Texts.ScopeVisible, inScope);
+                List<long> picked = _session.Picked;
+                if (picked == null)
+                {
+                    return _scopeCleared ? Texts.ScopeNone : string.Format(Texts.ScopeVisible, inScope);
+                }
+
+                if (!IsSearching)
+                {
+                    return string.Format(Texts.ScopePicked, inScope);
+                }
+
+                var pickedIds = new HashSet<long>(picked);
+                int pickedCount = _session.Data.Items.Count(item => pickedIds.Contains(item.Id));
+                return string.Format(Texts.ScopePickedFound, pickedCount, inScope);
             }
         }
+
+        private bool IsSearching => (SearchText ?? string.Empty).Trim().Length > 0;
 
         public string CountersText
         {
             get
             {
-                Preview preview = ShownPreview;
+                Preview preview = _session.Preview;
                 return preview == null
                     ? string.Empty
                     : string.Format(Texts.Counters, preview.ChangeCount, preview.LockedCount, preview.Skipped.Count);
             }
         }
 
-        /// <summary>Explains before writing why some numbers were stepped over.</summary>
-        public string SkippedHint
+        public string SkippedHint => _session.Preview?.Skipped.Count > 0 ? Texts.SkippedHint : string.Empty;
+
+        public void Close()
         {
-            get
+            SafeRunner.Run(_log, "Close", CloseSession);
+        }
+
+        private void CloseSession()
+        {
+            _session.DataChanged -= OnDataChanged;
+            _session.StateChanged -= OnStateChanged;
+            _session.Failed -= OnError;
+            _session.HistoryChanged -= OnHistoryChanged;
+            _session.Close();
+        }
+
+        // Window commands: the generated XxxCommand calls the method, and the method runs the work through SafeRunner.
+        [RelayCommand]
+        private void Open() => SafeRunner.Run(_log, nameof(Open), OpenCore, OnError);
+
+        [RelayCommand]
+        private void Pick() => SafeRunner.Run(_log, nameof(Pick), PickCore, OnError);
+
+        [RelayCommand]
+        private void ResetPick() => SafeRunner.Run(_log, nameof(ResetPick), ResetPickCore, OnError);
+
+        [RelayCommand]
+        private void Refresh() => SafeRunner.Run(_log, nameof(Refresh), RefreshCore, OnError);
+
+        [RelayCommand]
+        private void Apply() => SafeRunner.Run(_log, nameof(Apply), ApplyCore, OnError);
+
+        [RelayCommand]
+        private void Cancel() => SafeRunner.Run(_log, nameof(Cancel), CancelCore, OnError);
+
+        [RelayCommand]
+        private void ShowElement(TableRow row) => SafeRunner.Run(_log, nameof(ShowElement), () => ShowElementCore(row), OnError);
+
+        partial void OnSearchTextChanged(string value)
+        {
+            if (_clearingSearch)
             {
-                List<SkippedNumber> skipped = ShownPreview?.Skipped;
-                return skipped == null || skipped.Count == 0
-                    ? string.Empty
-                    : string.Format(Texts.SkippedHint, FoldRanges(skipped));
+                return;
             }
+
+            _scopeCleared = false;
+            SafeRunner.Run(_log, "Search", RebuildRows, OnError);
         }
 
-        /// <summary>The preview behind the shown rows; null while the table is empty.</summary>
-        private Preview ShownPreview =>
-            _session.ActiveDocument.Kind == DocumentKind.Project ? _session.Preview : null;
-
-        public WindowPlacement SavedPlacement => _session.WindowPlacement;
-
-        /// <summary>Asks about unsaved settings. false: the user cancelled closing.</summary>
-        public bool ConfirmClose()
+        partial void OnIsSearchByColumnChanged(bool value)
         {
-            bool close = true;
-            SafeRunner.Run(_log, "Closing", () =>
-            {
-                if (!_session.HasUnsavedSettings)
-                {
-                    return;
-                }
-
-                bool? answer = Dialogs.AskSave();
-                if (answer == null)
-                {
-                    close = false;
-                }
-                else if (answer == true)
-                {
-                    _session.SaveSettings();
-                }
-            }, OnError);
-            return close;
+            OnPropertyChanged(nameof(IsSearchAll));
+            SafeRunner.Run(_log, "Search", RebuildRows, OnError);
         }
 
-        /// <summary>The window is closed: stop listening and remember its placement.</summary>
-        public void Close(WindowPlacement placement)
+        partial void OnSelectedSearchColumnChanged(Option<SearchColumn> value)
         {
-            SafeRunner.Run(_log, "Close", () =>
-            {
-                _waitTimer.Stop();
-                _session.DataChanged -= OnDataChanged;
-                _session.DocumentStateChanged -= OnDocumentStateChanged;
-                _session.SettingsNotice -= OnSettingsNotice;
-                _session.Close(placement);
-            }, null);
+            SafeRunner.Run(_log, "Search", RebuildRows, OnError);
         }
 
-        private IAsyncRelayCommand Async(string name, Func<Task> action)
+        private void OnHistoryChanged(HistoryChange change)
         {
-            return new AsyncRelayCommand(() => SafeRunner.RunAsync(_log, name, action, OnError));
+            SafeRunner.Run(_log, "HistoryChanged", () => ShowHistoryChanged(change), OnError);
         }
 
-        private IRelayCommand Sync(string name, Action action)
+        private void ShowHistoryChanged(HistoryChange change)
         {
-            return new RelayCommand(() => SafeRunner.Run(_log, name, action, OnError));
+            _message = change == HistoryChange.Undone ? Texts.StatusUndone : Texts.StatusRedone;
+            StatusText = Texts.StatusLoading;
         }
 
         private void OnError(Exception exception)
@@ -295,164 +274,183 @@ namespace RevitNumbering.UI.ViewModels
             Dialogs?.ShowError(_log.FilePath);
         }
 
-        private async Task OpenAsync()
+        // Starts an operation that calls Revit. The status is drawn before the call is posted,
+        // because Revit may take the thread for a long time as soon as it gets the call.
+        private void Start(string status, Action operation)
         {
-            _isOpened = true;
-            foreach (SettingsNotice notice in _pendingNotices)
-            {
-                Dialogs.ShowMessage(TextLookup.Notice(notice));
-            }
-
-            _pendingNotices.Clear();
-            if (IsBlocked)
-            {
-                RefreshState();
-                return;
-            }
-
-            await RunBusyAsync(Texts.StatusLoading, () => _session.OpenAsync());
+            _message = string.Empty;
+            StatusText = status;
+            RefreshState();
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Render);
+            operation();
         }
 
-        private async Task SelectCategoryAsync(string categoryKey)
+        private void OpenCore()
         {
-            await RunBusyAsync(Texts.StatusLoading, () => _session.SelectCategoryAsync(categoryKey));
+            ReportLoadedSettings();
+            Start(Texts.StatusLoading, _session.Refresh);
+        }
+
+        private void ReportLoadedSettings()
+        {
+            SettingsLoadResult loaded = _session.LoadedSettings;
+            if (loaded.FileUnreadable)
+            {
+                Dialogs.ShowMessage(string.Format(Texts.SettingsUnreadable, _session.SettingsFilePath));
+            }
+
+            if (loaded.ResetCategories.Count > 0)
+            {
+                Dialogs.ShowMessage(string.Format(Texts.SettingsCategoriesReset,
+                    string.Join(", ", loaded.ResetCategories.Select(TextLookup.Category))));
+            }
+        }
+
+        private void SelectCategory(string categoryKey)
+        {
+            Start(Texts.StatusLoading, () => _session.SelectCategory(categoryKey));
             Settings.Attach(_session.Settings);
             RebuildRows();
         }
 
-        private Task RefreshAsync()
+        private void ResetPickCore()
         {
-            return RunBusyAsync(Texts.StatusLoading, () => _session.RefreshAsync());
+            _scopeCleared = false;
+            _session.ResetPick();
         }
 
-        private Task PickAsync()
+        private void ClearSearch()
         {
-            return CanPick ? RunBusyAsync(Texts.StatusPicking, () => _session.PickAsync()) : Task.CompletedTask;
+            _clearingSearch = true;
+            SearchText = string.Empty;
+            _clearingSearch = false;
+            _scopeCleared = true;
+            RebuildRows();
         }
 
-        private Task ShowElementAsync(TableRow row)
+        private void RefreshCore()
         {
-            // Works only with the mouse and only while the table shows the active document.
-            return row == null || _isBusy || IsTableStale
-                ? Task.CompletedTask
-                : RunBusyAsync(string.Empty, () => _session.ShowElementAsync(row.Id));
+            _scopeCleared = false;
+            Start(Texts.StatusLoading, _session.Refresh);
         }
 
-        private async Task ApplyAsync()
+        private void PickCore()
+        {
+            if (CanPick)
+            {
+                // The window is hidden while the user picks in the model. ShowState brings it back
+                // when the call ends (picked, Esc, error or refusal).
+                _windowHidden = true;
+                Dialogs?.HideWindow();
+                Start(Texts.StatusPicking, _session.Pick);
+            }
+        }
+
+        private void ShowElementCore(TableRow row)
+        {
+            if (row != null && !_session.IsBusy && !IsTableStale)
+            {
+                _session.ShowElement(row.Id);
+
+                // Minimize the window, so the element is visible in Revit.
+                Dialogs?.MinimizeWindow();
+            }
+        }
+
+        private void ApplyCore()
         {
             if (!CanApply)
             {
                 return;
             }
 
-            // Names for the summary: elements may be gone from the model after the call.
+            // Keep the names and the locked rows for the summary: the data is replaced during the call.
             List<NumberingItem> itemsBefore = _session.Data.Items;
-            ApplyResult result = null;
-            await RunBusyAsync(string.Format(Texts.StatusWriting, _session.Preview.ChangeCount),
-                async () => result = await _session.ApplyAsync());
+            List<PreviewRow> locked = _session.Preview.Rows.Where(row => row.Status == RowStatus.Locked).ToList();
+            _isWriting = true;
+            _cancelRequested = false;
+            Start(string.Format(Texts.StatusWriting, _session.Preview.ChangeCount),
+                () => _session.Apply(result => SafeRunner.Run(_log, "Applied",
+                    () => ShowApplied(result, itemsBefore, locked), OnError), new WriteProgress(this)));
+        }
 
+        private void ShowApplied(ApplyResult result, List<NumberingItem> itemsBefore, List<PreviewRow> locked)
+        {
             switch (result.Outcome)
             {
                 case ApplyOutcome.Written:
-                    StatusText = string.Format(Texts.StatusWritten,
-                        result.Write.WrittenCount, result.Write.Failures.Count);
-                    Dialogs.ShowSummary(BuildSummary(result.Write, itemsBefore));
+                    ClearSearch();
+                    ShowMessage(string.Format(Texts.StatusWritten,
+                        result.Write.WrittenCount, result.Write.Failures.Count + locked.Count));
+                    Dialogs.ShowSummary(BuildSummary(result.Write, itemsBefore, locked));
+                    if (!_session.SaveSettings())
+                    {
+                        Dialogs.ShowMessage(string.Format(Texts.SettingsSaveFailed, _log.FilePath));
+                    }
+
                     break;
                 case ApplyOutcome.DataChanged:
-                    StatusText = Texts.StatusDataChanged;
+                    ShowMessage(Texts.StatusDataChanged);
                     break;
                 case ApplyOutcome.DocumentUnavailable:
-                    StatusText = Texts.StatusDocumentChanged;
+                    ShowMessage(Texts.StatusDocumentChanged);
                     break;
                 case ApplyOutcome.Cancelled:
-                    StatusText = Texts.StatusCancelled;
+                    ShowMessage(Texts.StatusCancelled);
                     break;
             }
         }
 
-        private void Cancel()
+        private void CancelCore()
         {
-            _cancelRequested = true;
-            _session.CancelPending();
-        }
-
-        private void Save()
-        {
-            if (_session.SaveSettings())
-            {
-                StatusText = Texts.StatusSaved;
-            }
-        }
-
-        private void Export()
-        {
-            string path = Dialogs.PickExportPath();
-            if (path != null && _session.ExportSettings(path))
-            {
-                StatusText = string.Format(Texts.StatusExported, path);
-            }
-        }
-
-        private void Import()
-        {
-            string path = Dialogs.PickImportPath();
-            if (path == null)
+            if (!_isWriting)
             {
                 return;
             }
 
-            ImportResult result = _session.ImportSettings(path);
-            string text = TextLookup.Get("ImportResult_" + result);
-            if (result == ImportResult.Imported)
+            if (_session.IsRunning)
             {
-                Settings.Attach(_session.Settings);
-                RebuildRows();
-                StatusText = text;
+                _cancelRequested = true;
+                return;
             }
-            else
+
+            if (_session.CancelPending())
             {
-                Dialogs.ShowMessage(text);
+                ShowMessage(Texts.StatusCancelled);
             }
         }
 
-        /// <summary>
-        /// One call to Revit: buttons are disabled, the status is drawn before the call, and after a second
-        /// of waiting for Revit the Cancel button appears.
-        /// </summary>
-        private async Task RunBusyAsync(string status, Func<Task> action)
+        // Progress of the write. Revit and the window share one thread: between batches the window can
+        // draw the status and take a click on Cancel. This is safe only because the window is disabled
+        // while busy (CanEdit is false), so the processed messages cannot start another operation.
+        private sealed class WriteProgress : IWriteProgress
         {
-            _isBusy = true;
-            _cancelRequested = false;
-            StatusText = status;
-            RefreshState();
-            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Render);
-            _waitTimer.Start();
-            try
-            {
-                await action();
-            }
-            finally
-            {
-                _waitTimer.Stop();
-                _isBusy = false;
-                _isWaitingForRevit = false;
-                StatusText = _cancelRequested ? Texts.StatusCancelled : DocumentStatus();
-                RefreshState();
-            }
-        }
+            private readonly MainViewModel _owner;
 
-        private void OnWaitTimerTick(object sender, EventArgs e)
-        {
-            SafeRunner.Run(_log, "WaitTimer", () =>
+            public WriteProgress(MainViewModel owner)
             {
-                _waitTimer.Stop();
-                if (_session.IsPending)
+                _owner = owner;
+            }
+
+            public bool Continue(int done, int total)
+            {
+                _owner.StatusText = string.Format(Texts.StatusWriteProgress, done, total);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Input);
+                if (!_owner._cancelRequested)
                 {
-                    _isWaitingForRevit = true;
-                    StatusText = Texts.StatusRevitBusy;
-                    RefreshState();
+                    return true;
                 }
-            }, null);
+
+                _owner.StatusText = Texts.StatusStopping;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Render);
+                return false;
+            }
+        }
+
+        private void ShowMessage(string message)
+        {
+            _message = message;
+            StatusText = message;
         }
 
         private void OnDataChanged()
@@ -460,17 +458,26 @@ namespace RevitNumbering.UI.ViewModels
             SafeRunner.Run(_log, "DataChanged", RebuildRows, OnError);
         }
 
-        private void OnDocumentStateChanged()
+        private void OnStateChanged()
         {
-            SafeRunner.Run(_log, "DocumentStateChanged", () =>
-            {
-                if (!_isBusy)
-                {
-                    StatusText = DocumentStatus();
-                }
+            SafeRunner.Run(_log, "StateChanged", ShowState, OnError);
+        }
 
-                RefreshState();
-            }, OnError);
+        // While a call runs, its status stays. After it, the result of the last operation is shown.
+        private void ShowState()
+        {
+            if (!_session.IsBusy)
+            {
+                _isWriting = false;
+                StatusText = _session.DataMayBeStale ? Texts.StatusStale : _message;
+                if (_windowHidden)
+                {
+                    _windowHidden = false;
+                    Dialogs?.RestoreWindow();
+                }
+            }
+
+            RefreshState();
         }
 
         private void OnSettingsChanged()
@@ -478,36 +485,8 @@ namespace RevitNumbering.UI.ViewModels
             SafeRunner.Run(_log, "SettingsChanged", RebuildRows, OnError);
         }
 
-        private void OnSettingsNotice(SettingsNotice notice)
-        {
-            if (_isOpened)
-            {
-                SafeRunner.Run(_log, "SettingsNotice", () => Dialogs.ShowMessage(TextLookup.Notice(notice)), null);
-            }
-            else
-            {
-                // The window is not shown yet.
-                _pendingNotices.Add(notice);
-            }
-        }
-
-        /// <summary>The standing status of the table, when no operation reports its own.</summary>
-        private string DocumentStatus()
-        {
-            if (_session.DataMayBeStale)
-            {
-                return Texts.StatusStale;
-            }
-
-            return IsTableStale && _session.ActiveDocument.Kind == DocumentKind.Project
-                ? Texts.StatusOtherDocument
-                : string.Empty;
-        }
-
-        /// <summary>
-        /// Search → visible ids → recalculation → rows. The search works over shown texts, so it lives here;
-        /// the coordinator gets only the set of visible ids.
-        /// </summary>
+        // Search -> visible ids -> recalculation -> rows. The search works on shown texts, so it lives here.
+        // The session gets only the visible ids. This is the only place where the preview is calculated.
         private void RebuildRows()
         {
             CategoryData data = _session.Data;
@@ -540,16 +519,36 @@ namespace RevitNumbering.UI.ViewModels
                 });
             }
 
-            bool isSearching = _searchText.Trim().Length > 0;
-            List<TableRow> visible = isSearching ? all.Where(row => RowFilter.Matches(row, _searchText)).ToList() : all;
-            _session.Recalculate(isSearching ? new HashSet<long>(visible.Select(row => row.Id)) : null);
+            List<TableRow> visible = all;
 
-            // The preview has a row per element in the same order as the data.
+            string searchText = SearchText ?? string.Empty;
+            bool isSearching = IsSearching;
+            if (isSearching)
+            {
+                SearchColumn? column = IsSearchByColumn ? SelectedSearchColumn?.Value : (SearchColumn?)null;
+                visible = visible.Where(row => RowFilter.Matches(row, searchText, column)).ToList();
+            }
+
+            HashSet<long> visibleIds = null;
+            if (isSearching)
+            {
+                visibleIds = new HashSet<long>(visible.Select(row => row.Id));
+            }
+            else if (_scopeCleared && _session.Picked == null)
+            {
+                visibleIds = new HashSet<long>();
+            }
+
+            _session.Recalculate(visibleIds);
+
             Preview preview = _session.Preview;
+            var holderIds = new HashSet<long>(preview.Skipped.Select(skipped => skipped.OccupiedById));
+
+            // The preview has one row per element, in the same order as the data.
             for (int i = 0; i < all.Count; i++)
             {
                 all[i].New = preview.Rows[i].NewValue;
-                all[i].Status = TextLookup.Status(preview.Rows[i]);
+                all[i].Status = TextLookup.Status(preview.Rows[i], holderIds.Contains(preview.Rows[i].Item.Id));
             }
 
             _rows = visible;
@@ -557,19 +556,25 @@ namespace RevitNumbering.UI.ViewModels
             RefreshState();
         }
 
-        /// <summary>Every property is computed from the session: refresh all bindings at once.</summary>
+        // Every property is computed from the session, so refresh all bindings at once.
         private void RefreshState()
         {
             OnPropertyChanged(string.Empty);
         }
 
-        private static SummaryData BuildSummary(WriteResult write, List<NumberingItem> itemsBefore)
+        private static SummaryData BuildSummary(WriteResult write, List<NumberingItem> itemsBefore,
+            List<PreviewRow> locked)
         {
             var summary = new SummaryData
             {
                 WrittenText = string.Format(Texts.SummaryWritten, write.WrittenCount),
-                NotWrittenText = string.Format(Texts.SummaryNotWritten, write.Failures.Count),
+                NotWrittenText = string.Format(Texts.SummaryNotWritten, write.Failures.Count + locked.Count),
             };
+            foreach (PreviewRow row in locked)
+            {
+                summary.Failures.Add(string.Format(Texts.SummaryLine, row.Item.Id, row.Item.Name, TextLookup.Lock(row)));
+            }
+
             foreach (WriteFailure failure in write.Failures)
             {
                 string name = itemsBefore.Find(item => item.Id == failure.Id)?.Name ?? string.Empty;
@@ -577,37 +582,6 @@ namespace RevitNumbering.UI.ViewModels
             }
 
             return summary;
-        }
-
-        /// <summary>"Д-1-001 … Д-1-010, Д-1-015": numbers that follow each other on one level become a range.</summary>
-        private static string FoldRanges(List<SkippedNumber> skipped)
-        {
-            var ranges = new List<string>();
-            int start = 0;
-            for (int i = 1; i <= skipped.Count; i++)
-            {
-                bool continues = i < skipped.Count
-                    && skipped[i].LevelId == skipped[i - 1].LevelId
-                    && skipped[i].Number == skipped[i - 1].Number + 1;
-                if (continues)
-                {
-                    continue;
-                }
-
-                ranges.Add(i - 1 == start
-                    ? skipped[start].Value
-                    : string.Format(Texts.SkippedRange, skipped[start].Value, skipped[i - 1].Value));
-                start = i;
-            }
-
-            if (ranges.Count > MaxHintRanges)
-            {
-                int more = ranges.Count - MaxHintRanges;
-                ranges = ranges.Take(MaxHintRanges).ToList();
-                ranges.Add(string.Format(Texts.SkippedMore, more));
-            }
-
-            return string.Join(", ", ranges);
         }
     }
 }

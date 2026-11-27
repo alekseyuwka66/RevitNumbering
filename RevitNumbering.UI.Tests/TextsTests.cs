@@ -1,18 +1,16 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using RevitNumbering.Core.Contracts;
 using RevitNumbering.Core.Model;
 using RevitNumbering.Core.Numbering;
 using RevitNumbering.Core.Orderings;
 using RevitNumbering.Core.Settings;
-using RevitNumbering.Core.Templates;
 using RevitNumbering.UI.Resources;
 
 namespace RevitNumbering.UI.Tests
 {
-    /// <summary>
-    /// Texts of enum values and keys are found by composed keys ("LockReason_OwnedByOther"):
-    /// the compiler does not notice a missing or misspelled string, these tests do.
-    /// </summary>
+    // Texts of enum values and keys are found by composed keys, like "LockReason_OwnedByOther".
+    // The compiler does not see a missing or misspelled text, these tests do.
     public class TextsTests
     {
         private static void AssertHasText(string key)
@@ -35,9 +33,9 @@ namespace RevitNumbering.UI.Tests
         }
 
         [Fact]
-        public void EveryProblemCode_HasText()
+        public void EveryProblemKind_HasText()
         {
-            AssertEveryValueHasText<ProblemCode>("Problem_");
+            AssertEveryValueHasText<ProblemKind>("Problem_");
         }
 
         [Fact]
@@ -77,23 +75,21 @@ namespace RevitNumbering.UI.Tests
         }
 
         [Fact]
+        public void TransactionName_HasText()
+        {
+            AssertHasText("TransactionName");
+        }
+
+        [Fact]
         public void EveryOtherEnumShownInTheWindow_HasText()
         {
             AssertEveryValueHasText<RowStatus>("RowStatus_");
-            AssertEveryValueHasText<LevelCodePart>("LevelCodePart_");
-            AssertEveryValueHasText<SettingsNoticeKind>("SettingsNotice_");
-            AssertEveryValueHasText<ImportResult>("ImportResult_");
         }
 
         [Fact]
         public void TextsWithArguments_AreValidFormatStrings()
         {
             // A stray brace in a text would throw only when the text is shown.
-            foreach (ProblemCode code in Enum.GetValues(typeof(ProblemCode)))
-            {
-                Assert.NotEmpty(TextLookup.Problem(new Problem(code, "first", "", "third")));
-            }
-
             foreach (LockReason reason in Enum.GetValues(typeof(LockReason)))
             {
                 var row = new PreviewRow
@@ -105,21 +101,51 @@ namespace RevitNumbering.UI.Tests
                 Assert.NotEmpty(TextLookup.Status(row));
             }
 
+            foreach (ProblemKind kind in Enum.GetValues(typeof(ProblemKind)))
+            {
+                Assert.NotEmpty(TextLookup.Problem(new Problem(kind, "Д-01-001", new List<string> { "01", "" })));
+            }
+
             foreach (WriteFailReason reason in Enum.GetValues(typeof(WriteFailReason)))
             {
                 Assert.NotEmpty(TextLookup.WriteFail(new WriteFailure { Reason = reason, Details = "details" }));
             }
 
-            foreach (SettingsNoticeKind kind in Enum.GetValues(typeof(SettingsNoticeKind)))
+            foreach (string format in new[]
             {
-                Assert.NotEmpty(TextLookup.Notice(new SettingsNotice(kind, "Doors")));
+                Texts.WidthTooSmall, Texts.SettingsUnreadable, Texts.SettingsCategoriesReset,
+                Texts.SettingsSaveFailed, Texts.SkippedHint,
+            })
+            {
+                Assert.NotEmpty(string.Format(format, "first", 2, "third"));
+            }
+        }
+
+        [Fact]
+        public void RowsHoldingANumber_SortBeforeEveryOtherStatus()
+        {
+            var item = new NumberingItem { LockedBy = "user" };
+            string outOfScope = TextLookup.Status(new PreviewRow { Item = item, Status = RowStatus.OutOfScope }, true);
+            string locked = TextLookup.Status(
+                new PreviewRow { Item = item, Status = RowStatus.Locked, Lock = LockReason.ReadOnly }, true);
+
+            foreach (string name in new[] { "ru-RU", "en-US", string.Empty })
+            {
+                CompareInfo compare = CultureInfo.GetCultureInfo(name).CompareInfo;
+                foreach (RowStatus status in Enum.GetValues(typeof(RowStatus)))
+                {
+                    string other = TextLookup.Status(
+                        new PreviewRow { Item = item, Status = status, Lock = LockReason.ReadOnly });
+                    Assert.True(compare.Compare(outOfScope, other) < 0, name + ": " + outOfScope + " / " + other);
+                    Assert.True(compare.Compare(locked, other) < 0, name + ": " + locked + " / " + other);
+                }
             }
         }
 
         [Fact]
         public void NoLevelArgument_IsShownAsText()
         {
-            string text = TextLookup.Problem(new Problem(ProblemCode.NeedLevel, "01", ""));
+            string text = TextLookup.Problem(new Problem(ProblemKind.NeedLevel, levels: new List<string> { "01", "" }));
 
             Assert.Contains("01, " + Texts.NoLevel, text);
         }

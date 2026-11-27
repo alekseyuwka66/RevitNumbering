@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
+using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using RevitNumbering.Core.Numbering;
 using RevitNumbering.Core.Orderings;
 using RevitNumbering.Core.Settings;
@@ -8,22 +10,23 @@ using RevitNumbering.UI.Resources;
 
 namespace RevitNumbering.UI.ViewModels
 {
-    /// <summary>
-    /// The settings panel: template, level code and ordering of the current category.
-    /// Edits the CategorySettings object of the session directly and reports every change.
-    /// </summary>
-    public sealed class CategorySettingsViewModel : ObservableObject
+    // The settings panel: template parts and ordering of the current category.
+    // It edits the CategorySettings object of the session directly and reports every change.
+    public sealed partial class CategorySettingsViewModel : ObservableObject
     {
         private CategorySettings _settings;
+
+        // Errors that block Apply.
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasError))]
         private string _errorText = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasWarning))]
         private string _warningText = string.Empty;
 
         public CategorySettingsViewModel()
         {
-            LevelParts = Enum.GetValues(typeof(LevelCodePart)).Cast<LevelCodePart>()
-                .Select(part => new Option<LevelCodePart>(part, TextLookup.Get("LevelCodePart_" + part)))
-                .ToList();
-
             // Every registered strategy: the JsonDerivedType lines of the base class.
             Orderings = typeof(Ordering).GetCustomAttributes(typeof(JsonDerivedTypeAttribute), false)
                 .Cast<JsonDerivedTypeAttribute>()
@@ -32,63 +35,99 @@ namespace RevitNumbering.UI.ViewModels
                 .ToList();
         }
 
-        /// <summary>A setting changed: numbers must be calculated again.</summary>
-        public event Action Changed;
+        private void EditValue<T>(T? current, T value, Action<T> set, [CallerMemberName] string name = null)
+            where T : struct
+        {
+            if (_settings == null || current == null || EqualityComparer<T>.Default.Equals(current.Value, value))
+            {
+                return;
+            }
 
-        public List<Option<LevelCodePart>> LevelParts { get; }
+            set(value);
+            Edited(name);
+        }
+
+        private void EditText(string current, string value, Action<string> set, [CallerMemberName] string name = null)
+        {
+            if (_settings == null || current == value)
+            {
+                return;
+            }
+
+            set(value);
+            Edited(name);
+        }
+
+        private void Edited(string name)
+        {
+            OnPropertyChanged(name);
+            OnPropertyChanged(nameof(Example));
+            Changed?.Invoke();
+        }
+
+        // A setting changed: the numbers must be calculated again.
+        public event Action Changed;
 
         public List<Option<Type>> Orderings { get; }
 
-        public string Template
+        public string Prefix
         {
-            get => _settings?.Template ?? string.Empty;
-            set
+            get => _settings?.Prefix ?? string.Empty;
+            set => EditText(_settings?.Prefix, value ?? string.Empty, v => _settings.Prefix = v);
+        }
+
+        public bool IncludeLevel
+        {
+            get => _settings?.IncludeLevel ?? true;
+            set => EditValue(_settings?.IncludeLevel, value, v => _settings.IncludeLevel = v);
+        }
+
+        public bool LevelFirst
+        {
+            get => _settings?.LevelFirst ?? true;
+            set => EditValue(_settings?.LevelFirst, value, v => _settings.LevelFirst = v);
+        }
+
+        public string Separator
+        {
+            get => _settings?.Separator ?? string.Empty;
+            set => EditText(_settings?.Separator, value ?? string.Empty, v => _settings.Separator = v);
+        }
+
+        // The input is checked by IntRangeRule in the window.
+        public int Width
+        {
+            get => _settings?.Width ?? CategorySettings.MinWidth;
+            set => EditValue(_settings?.Width, value, v => _settings.Width = v);
+        }
+
+        public string Suffix
+        {
+            get => _settings?.Suffix ?? string.Empty;
+            set => EditText(_settings?.Suffix, value ?? string.Empty, v => _settings.Suffix = v);
+        }
+
+        // The settings shown as a number, for example "Д-01-001".
+        public string Example
+        {
+            get
             {
-                if (_settings == null || value == _settings.Template)
+                if (_settings == null || _settings.Width < CategorySettings.MinWidth
+                    || _settings.Width > CategorySettings.MaxWidth)
                 {
-                    return;
+                    return string.Empty;
                 }
 
-                _settings.Template = value;
-                OnPropertyChanged();
-                Changed?.Invoke();
+                return Template.From(_settings).Format(Texts.ExampleLevel, 1);
             }
         }
 
-        public Option<LevelCodePart> SelectedLevelPart
+        // The level and the counter swap places.
+        [RelayCommand]
+        private void Swap()
         {
-            get => _settings == null ? null : LevelParts.Find(option => option.Value == _settings.LevelCode.Part);
-            set
-            {
-                if (_settings == null || value == null || value.Value == _settings.LevelCode.Part)
-                {
-                    return;
-                }
-
-                _settings.LevelCode.Part = value.Value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsWordNumberVisible));
-                Changed?.Invoke();
-            }
+            LevelFirst = !LevelFirst;
         }
-
-        public int WordNumber
-        {
-            get => _settings?.LevelCode.WordNumber ?? 1;
-            set
-            {
-                if (_settings == null || value < 1 || value == _settings.LevelCode.WordNumber)
-                {
-                    return;
-                }
-
-                _settings.LevelCode.WordNumber = value;
-                OnPropertyChanged();
-                Changed?.Invoke();
-            }
-        }
-
-        public bool IsWordNumberVisible => _settings?.LevelCode.Part == LevelCodePart.Word;
 
         public Option<Type> SelectedOrdering
         {
@@ -108,46 +147,21 @@ namespace RevitNumbering.UI.ViewModels
             }
         }
 
-        /// <summary>The strategy object; its editor is chosen by its type.</summary>
+        // The strategy object. Its editor is chosen by its type.
         public Ordering Ordering => _settings?.Ordering;
 
-        /// <summary>Errors that block Apply.</summary>
-        public string ErrorText
-        {
-            get => _errorText;
-            private set
-            {
-                if (SetProperty(ref _errorText, value))
-                {
-                    OnPropertyChanged(nameof(HasError));
-                }
-            }
-        }
+        public bool HasError => ErrorText.Length > 0;
 
-        public bool HasError => _errorText.Length > 0;
+        public bool HasWarning => WarningText.Length > 0;
 
-        public string WarningText
-        {
-            get => _warningText;
-            private set
-            {
-                if (SetProperty(ref _warningText, value))
-                {
-                    OnPropertyChanged(nameof(HasWarning));
-                }
-            }
-        }
-
-        public bool HasWarning => _warningText.Length > 0;
-
-        /// <summary>Shows the settings of another category (or of an imported file).</summary>
+        // Shows the settings of another category.
         public void Attach(CategorySettings settings)
         {
             _settings = settings;
             OnPropertyChanged(string.Empty);
         }
 
-        /// <summary>A value was changed in a strategy editor.</summary>
+        // Called when a value was changed in a strategy editor.
         public void NotifyEditorChanged()
         {
             Changed?.Invoke();
@@ -156,7 +170,9 @@ namespace RevitNumbering.UI.ViewModels
         public void ShowProblems(Preview preview)
         {
             ErrorText = preview == null ? string.Empty : string.Join("\n", preview.Errors.Select(TextLookup.Problem));
-            WarningText = preview == null ? string.Empty : string.Join("\n", preview.Warnings.Select(TextLookup.Problem));
+            WarningText = preview?.NumberTooWide == null
+                ? string.Empty
+                : string.Format(Texts.WidthTooSmall, preview.NumberTooWide);
         }
     }
 }

@@ -52,6 +52,20 @@ namespace RevitNumbering.UI.Tests
             Assert.True(RowFilter.Matches(Row, text));
         }
 
+        [Theory]
+        [InlineData(SearchColumn.Id, "4561", true)]
+        [InlineData(SearchColumn.Id, "Дверь", false)]
+        [InlineData(SearchColumn.Name, "дверь_900", true)]
+        [InlineData(SearchColumn.Name, "Этаж", false)]
+        [InlineData(SearchColumn.Level, "этаж 2", true)]
+        [InlineData(SearchColumn.Level, "Д-02", false)]
+        [InlineData(SearchColumn.Current, "д-02-015", true)]
+        [InlineData(SearchColumn.Current, "Этаж", false)]
+        public void SearchInOneColumn_LooksOnlyAtThatColumn(SearchColumn column, string text, bool expected)
+        {
+            Assert.Equal(expected, RowFilter.Matches(Row, text, column));
+        }
+
         [Fact]
         public void Search_IgnoresSpacesAroundTheText()
         {

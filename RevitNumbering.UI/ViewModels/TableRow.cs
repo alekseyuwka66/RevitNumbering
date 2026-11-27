@@ -2,14 +2,13 @@ using System.Globalization;
 
 namespace RevitNumbering.UI.ViewModels
 {
-    /// <summary>One row of the table with ready texts. Built from the preview after every recalculation.</summary>
+    // One table row with ready texts. It is built from the preview after every recalculation.
     public sealed class TableRow
     {
         public long Id { get; set; }
 
         public string Name { get; set; }
 
-        /// <summary>"Без уровня" when the element has no level.</summary>
         public string Level { get; set; }
 
         public string Current { get; set; }
@@ -19,13 +18,22 @@ namespace RevitNumbering.UI.ViewModels
         public string Status { get; set; }
     }
 
-    /// <summary>
-    /// The search of the table: case-insensitive, by a part of the text, over the shown values of
-    /// ID, Name, Level and Current value. The new value does not take part.
-    /// </summary>
+    public enum SearchColumn
+    {
+        Id,
+        Name,
+        Level,
+        Current,
+    }
+
+    // The search of the table: ignores case and finds a part of the text in ID, name, level or current value.
+    // The new value and the status are not searched.
     public static class RowFilter
     {
-        public static bool Matches(TableRow row, string text)
+        private static readonly SearchColumn[] AllColumns =
+            { SearchColumn.Id, SearchColumn.Name, SearchColumn.Level, SearchColumn.Current };
+
+        public static bool Matches(TableRow row, string text, SearchColumn? column = null)
         {
             text = text?.Trim();
             if (string.IsNullOrEmpty(text))
@@ -33,10 +41,27 @@ namespace RevitNumbering.UI.ViewModels
                 return true;
             }
 
-            return Contains(row.Id.ToString(CultureInfo.InvariantCulture), text)
-                || Contains(row.Name, text)
-                || Contains(row.Level, text)
-                || Contains(row.Current, text);
+            if (column != null)
+            {
+                return Contains(ValueOf(row, column.Value), text);
+            }
+
+            return AllColumns.Any(c => Contains(ValueOf(row, c), text));
+        }
+
+        private static string ValueOf(TableRow row, SearchColumn column)
+        {
+            switch (column)
+            {
+                case SearchColumn.Id:
+                    return row.Id.ToString(CultureInfo.InvariantCulture);
+                case SearchColumn.Name:
+                    return row.Name;
+                case SearchColumn.Level:
+                    return row.Level;
+                default:
+                    return row.Current;
+            }
         }
 
         private static bool Contains(string value, string text)
@@ -45,7 +70,7 @@ namespace RevitNumbering.UI.ViewModels
         }
     }
 
-    /// <summary>An item of a list in the window: a value and its text.</summary>
+    // An item of a list in the window: a value and its title.
     public sealed class Option<T>
     {
         public Option(T value, string title)
@@ -59,14 +84,14 @@ namespace RevitNumbering.UI.ViewModels
         public string Title { get; }
     }
 
-    /// <summary>What the summary window shows after writing.</summary>
+    // What the summary window shows after writing.
     public sealed class SummaryData
     {
         public string WrittenText { get; set; }
 
         public string NotWrittenText { get; set; }
 
-        /// <summary>"ID, name — reason" for every element that was not written.</summary>
+        // "ID, name - reason" for every element that was not written.
         public List<string> Failures { get; set; } = new List<string>();
 
         public bool HasFailures => Failures.Count > 0;

@@ -10,8 +10,8 @@
 
 namespace RevitNumbering.UI.Resources {
     using System;
-
-
+    
+    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -19,19 +19,19 @@ namespace RevitNumbering.UI.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Texts {
-
+        
         private static global::System.Resources.ResourceManager resourceMan;
-
+        
         private static global::System.Globalization.CultureInfo resourceCulture;
-
+        
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Texts() {
         }
-
+        
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace RevitNumbering.UI.Resources {
                 return resourceMan;
             }
         }
-
+        
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
@@ -57,15 +57,6 @@ namespace RevitNumbering.UI.Resources {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Настройки нумерации изменены. Сохранить конфигурацию?.
-        /// </summary>
-        public static string AskSave {
-            get {
-                return ResourceManager.GetString("AskSave", resourceCulture);
             }
         }
         
@@ -106,24 +97,6 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Экспорт.
-        /// </summary>
-        public static string ButtonExport {
-            get {
-                return ResourceManager.GetString("ButtonExport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Импорт.
-        /// </summary>
-        public static string ButtonImport {
-            get {
-                return ResourceManager.GetString("ButtonImport", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Выбрать в модели.
         /// </summary>
         public static string ButtonPick {
@@ -151,11 +124,20 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Сохранить конфигурацию.
+        ///   Looks up a localized string similar to Поменять местами.
         /// </summary>
-        public static string ButtonSave {
+        public static string ButtonSwap {
             get {
-                return ResourceManager.GetString("ButtonSave", resourceCulture);
+                return ResourceManager.GetString("ButtonSwap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Показать.
+        /// </summary>
+        public static string ButtonZoom {
+            get {
+                return ResourceManager.GetString("ButtonZoom", resourceCulture);
             }
         }
         
@@ -313,7 +295,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Файл журнала скопирован в буфер обмена — вставьте его в письмо или сообщение..
+        ///   Looks up a localized string similar to Файл журнала скопирован в буфер обмена - вставьте его в письмо или сообщение..
         /// </summary>
         public static string ErrorLogCopied {
             get {
@@ -340,7 +322,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Нумерация элементов — ошибка.
+        ///   Looks up a localized string similar to Нумерация элементов - ошибка.
         /// </summary>
         public static string ErrorTitle {
             get {
@@ -349,65 +331,20 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to numbering-settings.json.
+        ///   Looks up a localized string similar to 01.
         /// </summary>
-        public static string ExportFileName {
+        public static string ExampleLevel {
             get {
-                return ResourceManager.GetString("ExportFileName", resourceCulture);
+                return ResourceManager.GetString("ExampleLevel", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Конфигурация импортирована; прежний файл настроек сохранён с расширением .bak.
+        ///   Looks up a localized string similar to Минимум цифр в номере: 1 - без нулей, 3 - 001, 002….
         /// </summary>
-        public static string ImportResult_Imported {
+        public static string HintWidth {
             get {
-                return ResourceManager.GetString("ImportResult_Imported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Файл не является конфигурацией нумерации или содержит неверные настройки — конфигурация не изменена.
-        /// </summary>
-        public static string ImportResult_Invalid {
-            get {
-                return ResourceManager.GetString("ImportResult_Invalid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Файл создан более новой версией плагина — конфигурация не изменена.
-        /// </summary>
-        public static string ImportResult_NewerSchema {
-            get {
-                return ResourceManager.GetString("ImportResult_NewerSchema", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Не удалось заменить файл настроек — конфигурация не изменена.
-        /// </summary>
-        public static string ImportResult_SaveFailed {
-            get {
-                return ResourceManager.GetString("ImportResult_SaveFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Файл не читается — конфигурация не изменена.
-        /// </summary>
-        public static string ImportResult_Unreadable {
-            get {
-                return ResourceManager.GetString("ImportResult_Unreadable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Конфигурация нумерации (*.json)|*.json.
-        /// </summary>
-        public static string JsonFilter {
-            get {
-                return ResourceManager.GetString("JsonFilter", resourceCulture);
+                return ResourceManager.GetString("HintWidth", resourceCulture);
             }
         }
         
@@ -439,11 +376,20 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Код уровня (из имени уровня).
+        ///   Looks up a localized string similar to Пример:.
         /// </summary>
-        public static string LabelLevelCode {
+        public static string LabelExample {
             get {
-                return ResourceManager.GetString("LabelLevelCode", resourceCulture);
+                return ResourceManager.GetString("LabelExample", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Уровень.
+        /// </summary>
+        public static string LabelLevel {
+            get {
+                return ResourceManager.GetString("LabelLevel", resourceCulture);
             }
         }
         
@@ -453,6 +399,15 @@ namespace RevitNumbering.UI.Resources {
         public static string LabelOrdering {
             get {
                 return ResourceManager.GetString("LabelOrdering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Префикс.
+        /// </summary>
+        public static string LabelPrefix {
+            get {
+                return ResourceManager.GetString("LabelPrefix", resourceCulture);
             }
         }
         
@@ -475,6 +430,24 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Разделитель.
+        /// </summary>
+        public static string LabelSeparator {
+            get {
+                return ResourceManager.GetString("LabelSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Суффикс.
+        /// </summary>
+        public static string LabelSuffix {
+            get {
+                return ResourceManager.GetString("LabelSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Шаблон номера.
         /// </summary>
         public static string LabelTemplate {
@@ -484,47 +457,11 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Номер слова.
+        ///   Looks up a localized string similar to Разрядность.
         /// </summary>
-        public static string LabelWordNumber {
+        public static string LabelWidth {
             get {
-                return ResourceManager.GetString("LabelWordNumber", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Слова в имени уровня разделяются пробелом и знаком «_»..
-        /// </summary>
-        public static string LevelCodeHint {
-            get {
-                return ResourceManager.GetString("LevelCodeHint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Последнее слово.
-        /// </summary>
-        public static string LevelCodePart_LastWord {
-            get {
-                return ResourceManager.GetString("LevelCodePart_LastWord", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Имя целиком.
-        /// </summary>
-        public static string LevelCodePart_Whole {
-            get {
-                return ResourceManager.GetString("LevelCodePart_Whole", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Слово с номером.
-        /// </summary>
-        public static string LevelCodePart_Word {
-            get {
-                return ResourceManager.GetString("LevelCodePart_Word", resourceCulture);
+                return ResourceManager.GetString("LabelWidth", resourceCulture);
             }
         }
         
@@ -619,7 +556,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Сетка: рядами или столбцами от угла.
+        ///   Looks up a localized string similar to Сетка.
         /// </summary>
         public static string Ordering_Grid {
             get {
@@ -664,7 +601,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Данные не загружены — нажмите «Обновить».
+        ///   Looks up a localized string similar to Данные не загружены - нажмите «Обновить».
         /// </summary>
         public static string PlaceholderNoData {
             get {
@@ -700,101 +637,20 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Неверная разрядность {0}: после двоеточия — только нули, от 1 до 9, одинаково во всех номерах шаблона.
+        ///   Looks up a localized string similar to Номер {0} получается сразу на нескольких уровнях ({1}) - добавьте разделитель между уровнем и номером.
         /// </summary>
-        public static string Problem_BadWidth {
+        public static string Problem_DuplicateNumber {
             get {
-                return ResourceManager.GetString("Problem_BadWidth", resourceCulture);
+                return ResourceManager.GetString("Problem_DuplicateNumber", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Во встроенных настройках по умолчанию неверная запись категории «{0}».
-        /// </summary>
-        public static string Problem_DefaultsCategoryInvalid {
-            get {
-                return ResourceManager.GetString("Problem_DefaultsCategoryInvalid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Во встроенных настройках по умолчанию нет записи категории «{0}».
-        /// </summary>
-        public static string Problem_DefaultsCategoryMissing {
-            get {
-                return ResourceManager.GetString("Problem_DefaultsCategoryMissing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Встроенные настройки по умолчанию не читаются.
-        /// </summary>
-        public static string Problem_DefaultsUnreadable {
-            get {
-                return ResourceManager.GetString("Problem_DefaultsUnreadable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Номер {0} получается сразу на нескольких уровнях ({1}) — у них одинаковый код уровня.
-        /// </summary>
-        public static string Problem_DuplicateInScope {
-            get {
-                return ResourceManager.GetString("Problem_DuplicateInScope", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to В имени уровня нет выбранной части: {0}.
-        /// </summary>
-        public static string Problem_LevelPartMissing {
-            get {
-                return ResourceManager.GetString("Problem_LevelPartMissing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to В охвате несколько уровней ({0}), а в шаблоне нет {{Уровень}} — номера на разных уровнях совпадут.
+        ///   Looks up a localized string similar to В охвате несколько уровней ({1}), а уровень не входит в номер - номера на разных уровнях совпадут. Включите «Уровень».
         /// </summary>
         public static string Problem_NeedLevel {
             get {
                 return ResourceManager.GetString("Problem_NeedLevel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to В шаблоне нет порядкового номера {{N}}.
-        /// </summary>
-        public static string Problem_NoNumber {
-            get {
-                return ResourceManager.GetString("Problem_NoNumber", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Фигурная скобка без пары.
-        /// </summary>
-        public static string Problem_UnclosedBrace {
-            get {
-                return ResourceManager.GetString("Problem_UnclosedBrace", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Неизвестная подстановка {0}.
-        /// </summary>
-        public static string Problem_UnknownPlaceholder {
-            get {
-                return ResourceManager.GetString("Problem_UnknownPlaceholder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Номер {0} длиннее разрядности ({1}) — номера будут разной длины.
-        /// </summary>
-        public static string Problem_WidthTooSmall {
-            get {
-                return ResourceManager.GetString("Problem_WidthTooSmall", resourceCulture);
             }
         }
         
@@ -835,15 +691,6 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Элементы, смещённые поперёк ряда не больше допуска, считаются одним рядом. Ориентация — по осям модели: «сверху» — больший Y, «слева» — меньший X..
-        /// </summary>
-        public static string RowToleranceHint {
-            get {
-                return ResourceManager.GetString("RowToleranceHint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Охват: выбранные в модели ({0}).
         /// </summary>
         public static string ScopePicked {
@@ -864,41 +711,32 @@ namespace RevitNumbering.UI.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Настройки категорий не прочитаны и заменены настройками по умолчанию: {0}.
         /// </summary>
-        public static string SettingsNotice_CategoriesReset {
+        public static string SettingsCategoriesReset {
             get {
-                return ResourceManager.GetString("SettingsNotice_CategoriesReset", resourceCulture);
+                return ResourceManager.GetString("SettingsCategoriesReset", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Файл настроек повреждён или не читается. Загружены настройки по умолчанию, копия файла сохранена: {0}.
+        ///   Looks up a localized string similar to Не удалось записать файл настроек. Подробности записаны в журнал: {0}.
         /// </summary>
-        public static string SettingsNotice_FileCorrupted {
+        public static string SettingsSaveFailed {
             get {
-                return ResourceManager.GetString("SettingsNotice_FileCorrupted", resourceCulture);
+                return ResourceManager.GetString("SettingsSaveFailed", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Файл настроек создан более новой версией плагина: он прочитан, но сохранение в него отключено.
+        ///   Looks up a localized string similar to Файл настроек поврежден или не читается: {0}. Загружены настройки по умолчанию; файл не перезаписывается - исправьте или удалите его, чтобы настройки снова сохранялись..
         /// </summary>
-        public static string SettingsNotice_NewerSchema {
+        public static string SettingsUnreadable {
             get {
-                return ResourceManager.GetString("SettingsNotice_NewerSchema", resourceCulture);
+                return ResourceManager.GetString("SettingsUnreadable", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Не удалось записать файл: {0}.
-        /// </summary>
-        public static string SettingsNotice_SaveFailed {
-            get {
-                return ResourceManager.GetString("SettingsNotice_SaveFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Номера {0} заняты элементами вне охвата или зафиксированными — выданы следующие свободные. Чтобы перенумеровать полностью, выберите охват всего уровня..
+        ///   Looks up a localized string similar to Часть номеров занята другими элементами.
         /// </summary>
         public static string SkippedHint {
             get {
@@ -906,35 +744,10 @@ namespace RevitNumbering.UI.Resources {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to и ещё {0}.
-        /// </summary>
-        public static string SkippedMore {
-            get {
-                return ResourceManager.GetString("SkippedMore", resourceCulture);
-            }
-        }
+        
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} … {1}.
-        /// </summary>
-        public static string SkippedRange {
-            get {
-                return ResourceManager.GetString("SkippedRange", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Плагин собран с ошибкой и не может работать. Сообщите разработчику:.
-        /// </summary>
-        public static string StartupBlocked {
-            get {
-                return ResourceManager.GetString("StartupBlocked", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Запрос отменён.
+        ///   Looks up a localized string similar to Нумерация отменена. Изменения откачены, ничего не записано.
         /// </summary>
         public static string StatusCancelled {
             get {
@@ -943,7 +756,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Данные в модели изменились — проверьте новые значения и нажмите «Применить» ещё раз. Ничего не записано..
+        ///   Looks up a localized string similar to Данные в модели изменились - проверьте новые значения и нажмите «Применить» еще раз. Ничего не записано..
         /// </summary>
         public static string StatusDataChanged {
             get {
@@ -961,29 +774,11 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Конфигурация экспортирована: {0}.
-        /// </summary>
-        public static string StatusExported {
-            get {
-                return ResourceManager.GetString("StatusExported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Загрузка….
         /// </summary>
         public static string StatusLoading {
             get {
                 return ResourceManager.GetString("StatusLoading", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Активен другой документ — нажмите «Обновить», чтобы загрузить его.
-        /// </summary>
-        public static string StatusOtherDocument {
-            get {
-                return ResourceManager.GetString("StatusOtherDocument", resourceCulture);
             }
         }
         
@@ -997,29 +792,29 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Revit занят — ожидание.
-        /// </summary>
-        public static string StatusRevitBusy {
-            get {
-                return ResourceManager.GetString("StatusRevitBusy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Конфигурация сохранена.
-        /// </summary>
-        public static string StatusSaved {
-            get {
-                return ResourceManager.GetString("StatusSaved", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Данные могли устареть — нажмите «Обновить».
+        ///   Looks up a localized string similar to Данные могли устареть - нажмите «Обновить».
         /// </summary>
         public static string StatusStale {
             get {
                 return ResourceManager.GetString("StatusStale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Отмена нумерации - откатываю изменения….
+        /// </summary>
+        public static string StatusStopping {
+            get {
+                return ResourceManager.GetString("StatusStopping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Записано {0} из {1}….
+        /// </summary>
+        public static string StatusWriteProgress {
+            get {
+                return ResourceManager.GetString("StatusWriteProgress", resourceCulture);
             }
         }
         
@@ -1042,7 +837,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}, {1} — {2}.
+        ///   Looks up a localized string similar to {0}, {1} - {2}.
         /// </summary>
         public static string SummaryLine {
             get {
@@ -1060,20 +855,11 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Нумерация элементов — итог.
+        ///   Looks up a localized string similar to Нумерация элементов - результат.
         /// </summary>
         public static string SummaryTitle {
             get {
                 return ResourceManager.GetString("SummaryTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Всю нумерацию отменяет одна команда «Отменить» (Ctrl+Z) в Revit..
-        /// </summary>
-        public static string SummaryUndoHint {
-            get {
-                return ResourceManager.GetString("SummaryUndoHint", resourceCulture);
             }
         }
         
@@ -1087,11 +873,11 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Подстановки: {Уровень} или {Level} — код уровня; {N} — порядковый номер; {N:000} — номер с ведущими нулями (число нулей — разрядность). Остальной текст копируется как есть..
+        ///   Looks up a localized string similar to Нумерация элементов.
         /// </summary>
-        public static string TemplateHint {
+        public static string TransactionName {
             get {
-                return ResourceManager.GetString("TemplateHint", resourceCulture);
+                return ResourceManager.GetString("TransactionName", resourceCulture);
             }
         }
         
@@ -1105,6 +891,15 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Номер {0} длиннее разрядности - номера будут разной длины.
+        /// </summary>
+        public static string WidthTooSmall {
+            get {
+                return ResourceManager.GetString("WidthTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Нумерация элементов.
         /// </summary>
         public static string WindowTitle {
@@ -1114,7 +909,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to элемент удалён.
+        ///   Looks up a localized string similar to элемент удален.
         /// </summary>
         public static string WriteFail_Deleted {
             get {
@@ -1123,7 +918,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to элемент устарел — обновите модель до последней версии.
+        ///   Looks up a localized string similar to элемент устарел - обновите модель до последней версии.
         /// </summary>
         public static string WriteFail_NotUpToDate {
             get {
@@ -1150,7 +945,7 @@ namespace RevitNumbering.UI.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Revit не принял значение.
+        ///   Looks up a localized string similar to Revit не принял значение: {0}.
         /// </summary>
         public static string WriteFail_Rejected {
             get {
@@ -1164,6 +959,79 @@ namespace RevitNumbering.UI.Resources {
         public static string WriteFail_RolledBack {
             get {
                 return ResourceManager.GetString("WriteFail_RolledBack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Вся таблица.
+        /// </summary>
+        public static string SearchAllTable {
+            get {
+                return ResourceManager.GetString("SearchAllTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Столбец.
+        /// </summary>
+        public static string SearchByColumn {
+            get {
+                return ResourceManager.GetString("SearchByColumn", resourceCulture);
+            }
+        }
+        
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Охват: не задан.
+        /// </summary>
+        public static string ScopeNone {
+            get {
+                return ResourceManager.GetString("ScopeNone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Охват: выбранные в модели ({0}), найдено по поиску ({1}).
+        /// </summary>
+        public static string ScopePickedFound {
+            get {
+                return ResourceManager.GetString("ScopePickedFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нумерация отменена в Revit - таблица обновлена.
+        /// </summary>
+        public static string StatusUndone {
+            get {
+                return ResourceManager.GetString("StatusUndone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Нумерация повторена в Revit - таблица обновлена.
+        /// </summary>
+        public static string StatusRedone {
+            get {
+                return ResourceManager.GetString("StatusRedone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Занимает номер: вне охвата.
+        /// </summary>
+        public static string RowStatus_OutOfScopeHolder {
+            get {
+                return ResourceManager.GetString("RowStatus_OutOfScopeHolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Занимает номер: зафиксирован ({0}).
+        /// </summary>
+        public static string RowStatus_LockedHolder {
+            get {
+                return ResourceManager.GetString("RowStatus_LockedHolder", resourceCulture);
             }
         }
     }
