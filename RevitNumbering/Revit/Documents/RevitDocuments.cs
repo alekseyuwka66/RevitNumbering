@@ -5,85 +5,70 @@ using Autodesk.Revit.UI.Events;
 using RevitNumbering.Core.Contracts;
 using RevitNumbering.Core.Logging;
 using RevitNumbering.Core.Model;
-using RevitNumbering.Revit.Common;
 
 namespace RevitNumbering.Revit.Documents
 {
-    /// <summary>
-    /// The only place that subscribes to Revit events. Tracks the active document, gives every open
-    /// document its DocumentId and finds the Document by it.
-    /// </summary>
+    // The only place that subscribes to Revit events. It tracks the active document, gives every
+    // document that becomes active its DocumentId, and finds the Document by that id.
     internal sealed class RevitDocuments : IDocuments
     {
         private static readonly DocumentInfo NoDocument = new DocumentInfo { Kind = DocumentKind.None };
 
         private readonly UIControlledApplication _application;
-        private readonly ILog _log;
+        private readonly FileLog _log;
+        private readonly string _numberingTransactionName;
 
-        /// <summary>Open documents and the ids issued to them; documents are matched by Document.Equals.</summary>
+        // Documents that have been active, with their ids.
         private readonly List<KnownDocument> _known = new List<KnownDocument>();
-
-        /// <summary>Documents that are being closed: the id of the closing event → our id.</summary>
-        private readonly List<KeyValuePair<int, DocumentId>> _closing = new List<KeyValuePair<int, DocumentId>>();
 
         private int _lastId;
 
-        public RevitDocuments(UIControlledApplication application, ILog log)
+        // From the last runner call or window opening. Needed to pick and show elements.
+        private UIApplication _uiApplication;
+
+        public RevitDocuments(UIControlledApplication application, FileLog log, string numberingTransactionName)
         {
             _application = application;
             _log = log;
+            _numberingTransactionName = numberingTransactionName;
             Active = NoDocument;
 
             _application.ViewActivated += OnViewActivated;
             _application.ApplicationClosing += OnApplicationClosing;
-            _application.ControlledApplication.DocumentChanged += OnDocumentChanged;
-            _application.ControlledApplication.DocumentClosing += OnDocumentClosing;
             _application.ControlledApplication.DocumentClosed += OnDocumentClosed;
+            _application.ControlledApplication.DocumentChanged += OnDocumentChanged;
         }
 
         public DocumentInfo Active { get; private set; }
 
         public event Action ActiveChanged;
 
-        public event Action<DocumentId> Closed;
+        public event Action<HistoryChange> NumberingHistoryChanged;
 
-        public event Action<DocumentId, ModelChanges> Changed;
-
-        /// <summary>Revit is closing: the window must close without questions.</summary>
+        // Revit is closing: the window must close.
         public event Action ApplicationClosing;
 
         public void Unsubscribe()
         {
             _application.ViewActivated -= OnViewActivated;
             _application.ApplicationClosing -= OnApplicationClosing;
-            _application.ControlledApplication.DocumentChanged -= OnDocumentChanged;
-            _application.ControlledApplication.DocumentClosing -= OnDocumentClosing;
             _application.ControlledApplication.DocumentClosed -= OnDocumentClosed;
+            _application.ControlledApplication.DocumentChanged -= OnDocumentChanged;
         }
 
-        /// <summary>Reconciles the active document with Revit, in case a view activation was missed.</summary>
+        // Syncs the active document with Revit, in case a view activation was missed. API context only. Never throws.
         public void Refresh(UIApplication application)
         {
-            SetActive(application.ActiveUIDocument?.Document);
+            _uiApplication = application;
+            SafeRunner.Run(_log, "Refresh", () => SetActive(application.ActiveUIDocument?.Document));
         }
 
-        /// <summary>The open document of the id that is the active project; otherwise the call is refused.</summary>
+        // Returns the open document if it is the active project. Otherwise refuses with DocumentUnavailableException.
         public Document RequireActive(DocumentId id)
         {
-            Document document = RequireOpen(id);
-            if (!id.Equals(Active.Id) || document.IsFamilyDocument)
-            {
-                throw new DocumentUnavailableException();
-            }
-
-            return document;
-        }
-
-        /// <summary>The open document of the id, active or not.</summary>
-        public Document RequireOpen(DocumentId id)
-        {
             KnownDocument known = _known.Find(k => k.Id.Equals(id));
-            if (known == null || !known.Document.IsValidObject)
+            if (known == null || !known.Document.IsValidObject || !id.Equals(Active.Id)
+                || known.Document.IsFamilyDocument)
             {
                 throw new DocumentUnavailableException();
             }
@@ -91,10 +76,23 @@ namespace RevitNumbering.Revit.Documents
             return known.Document;
         }
 
+        // The UI document of the active project. Needed to pick and show elements.
+        public UIDocument RequireActiveUi(DocumentId id)
+        {
+            Document active = RequireActive(id);
+            UIDocument uiDocument = _uiApplication?.ActiveUIDocument;
+            if (uiDocument == null || !uiDocument.Document.Equals(active))
+            {
+                throw new DocumentUnavailableException();
+            }
+
+            return uiDocument;
+        }
+
+        // A document gets its id when it becomes active for the first time.
         private DocumentId IdOf(Document document)
         {
-            _known.RemoveAll(k => !k.Document.IsValidObject);
-            KnownDocument known = _known.Find(k => k.Document.Equals(document));
+            KnownDocument known = _known.Find(k => k.Document.IsValidObject && k.Document.Equals(document));
             if (known == null)
             {
                 known = new KnownDocument { Document = document, Id = new DocumentId(++_lastId) };
@@ -106,13 +104,12 @@ namespace RevitNumbering.Revit.Documents
 
         private void SetActive(Document document)
         {
-            DocumentInfo next = document == null || !document.IsValidObject
+            DocumentInfo next = document == null
                 ? NoDocument
                 : new DocumentInfo
                 {
                     Id = IdOf(document),
                     Kind = document.IsFamilyDocument ? DocumentKind.Family : DocumentKind.Project,
-                    Title = document.Title,
                 };
 
             bool changed = next.Kind != Active.Kind || !Equals(next.Id, Active.Id);
@@ -123,78 +120,60 @@ namespace RevitNumbering.Revit.Documents
             }
         }
 
+        // Revit event handlers: a named method does the work, a failure is only logged.
         private void OnViewActivated(object sender, ViewActivatedEventArgs e)
         {
-            SafeRunner.Run(_log, "ViewActivated", () => SetActive(e.Document), null);
-        }
-
-        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
-        {
-            if (Changed == null)
-            {
-                return;
-            }
-
-            SafeRunner.Run(_log, "DocumentChanged", () =>
-            {
-                Document document = e.GetDocument();
-                ICollection<ElementId> added = e.GetAddedElementIds();
-                ICollection<ElementId> modified = e.GetModifiedElementIds();
-                var changes = new ModelChanges
-                {
-                    Added = added.Select(RevitIds.ToLong).ToList(),
-                    Modified = modified.Select(RevitIds.ToLong).ToList(),
-                    Deleted = e.GetDeletedElementIds().Select(RevitIds.ToLong).ToList(),
-                    // Deleted levels are recognized by the listener: it knows the ids of the levels it has read.
-                    LevelsChanged = added.Concat(modified).Any(id => document.GetElement(id) is Level),
-                };
-                Changed?.Invoke(IdOf(document), changes);
-            }, null);
-        }
-
-        private void OnDocumentClosing(object sender, DocumentClosingEventArgs e)
-        {
-            SafeRunner.Run(_log, "DocumentClosing", () =>
-            {
-                KnownDocument known = _known.Find(k => k.Document.IsValidObject && k.Document.Equals(e.Document));
-                if (known != null)
-                {
-                    _closing.Add(new KeyValuePair<int, DocumentId>(e.DocumentId, known.Id));
-                }
-            }, null);
+            SafeRunner.Run(_log, "ViewActivated", () => SetActive(e.Document));
         }
 
         private void OnDocumentClosed(object sender, DocumentClosedEventArgs e)
         {
-            SafeRunner.Run(_log, "DocumentClosed", () =>
-            {
-                int index = _closing.FindIndex(pair => pair.Key == e.DocumentId);
-                if (index < 0)
-                {
-                    return;
-                }
+            SafeRunner.Run(_log, "DocumentClosed", HandleDocumentClosed);
+        }
 
-                DocumentId id = _closing[index].Value;
-                _closing.RemoveAt(index);
-                if (e.Status != RevitAPIEventStatus.Succeeded)
-                {
-                    // The closing was cancelled: the document stays open.
-                    return;
-                }
-
-                _known.RemoveAll(k => k.Id.Equals(id));
-                if (id.Equals(Active.Id))
-                {
-                    Active = NoDocument;
-                }
-
-                Closed?.Invoke(id);
-            }, null);
+        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        {
+            SafeRunner.Run(_log, "DocumentChanged", () => HandleDocumentChanged(e));
         }
 
         private void OnApplicationClosing(object sender, ApplicationClosingEventArgs e)
         {
-            SafeRunner.Run(_log, "ApplicationClosing", () => ApplicationClosing?.Invoke(), null);
+            SafeRunner.Run(_log, "ApplicationClosing", () => ApplicationClosing?.Invoke());
+        }
+
+        // DocumentChanged fires on every transaction. Only undo and redo of the numbering step of the active document matter.
+        private void HandleDocumentChanged(DocumentChangedEventArgs e)
+        {
+            UndoOperation operation = e.Operation;
+            if (operation != UndoOperation.TransactionUndone && operation != UndoOperation.TransactionRedone)
+            {
+                return;
+            }
+
+            if (!e.GetTransactionNames().Contains(_numberingTransactionName))
+            {
+                return;
+            }
+
+            KnownDocument active = _known.Find(k => k.Id.Equals(Active.Id));
+            if (active == null || !active.Document.Equals(e.GetDocument()))
+            {
+                return;
+            }
+
+            NumberingHistoryChanged?.Invoke(
+                operation == UndoOperation.TransactionUndone ? HistoryChange.Undone : HistoryChange.Redone);
+        }
+
+        // A closed document is no longer valid, so it is forgotten. If it was the active one,
+        // there is no active document until Revit activates a view of another one.
+        private void HandleDocumentClosed()
+        {
+            _known.RemoveAll(k => !k.Document.IsValidObject);
+            if (Active.Id != null && !_known.Exists(k => k.Id.Equals(Active.Id)))
+            {
+                SetActive(null);
+            }
         }
 
         private sealed class KnownDocument

@@ -3,14 +3,11 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using RevitNumbering.Revit.Categories;
 using RevitNumbering.Revit.Common;
-using RevitNumbering.Revit.Reading;
 
 namespace RevitNumbering.Revit.Selection
 {
-    /// <summary>
-    /// One filter for every category: lets pick elements of the category that are not ignored,
-    /// and also groups and assemblies (their members are read afterwards).
-    /// </summary>
+    // One filter for every category: it allows elements the category accepts,
+    // and also groups and assemblies (their members are read afterwards).
     internal sealed class CategorySelectionFilter : ISelectionFilter
     {
         private readonly RevitCategory _category;
@@ -22,29 +19,22 @@ namespace RevitNumbering.Revit.Selection
 
         public bool AllowElement(Element element)
         {
-            return element is Group || element is AssemblyInstance || IsCategoryElement(element);
+            return element is Group || element is AssemblyInstance || _category.Accepts(element);
         }
 
         public bool AllowReference(Reference reference, XYZ position)
         {
             return false;
         }
-
-        public bool IsCategoryElement(Element element)
-        {
-            return ModelReader.IsOfCategory(element, _category) && !ModelReader.IsIgnored(element, _category);
-        }
     }
 
-    /// <summary>Picking elements in the model and showing an element. Only inside a runner call.</summary>
-    internal sealed class ElementPicker
+    // Picking elements in the model and showing an element. API context only.
+    internal static class ElementPicker
     {
-        /// <summary>
-        /// Starts the selection mode of Revit with the current selection preselected.
-        /// Members of picked groups and assemblies are read (nested groups too); nothing is ungrouped.
-        /// null: the user pressed Esc.
-        /// </summary>
-        public List<long> Pick(UIDocument uiDocument, RevitCategory category, string prompt)
+        // Starts the Revit selection mode with the current selection preselected.
+        // Members of picked groups and assemblies are read (nested ones too). Nothing is ungrouped.
+        // Returns null when the user presses Esc.
+        public static List<long> Pick(UIDocument uiDocument, RevitCategory category, string prompt)
         {
             Document document = uiDocument.Document;
             var filter = new CategorySelectionFilter(category);
@@ -68,14 +58,13 @@ namespace RevitNumbering.Revit.Selection
             var visited = new HashSet<ElementId>();
             foreach (Reference reference in picked)
             {
-                Collect(document.GetElement(reference), filter, visited, ids);
+                Collect(document.GetElement(reference), category, visited, ids);
             }
 
             return ids;
         }
 
-        /// <summary>Zooms to the element and selects it.</summary>
-        public void Show(UIDocument uiDocument, long id)
+        public static void Show(UIDocument uiDocument, long id)
         {
             ElementId elementId = RevitIds.ToElementId(id);
             if (uiDocument.Document.GetElement(elementId) == null)
@@ -87,7 +76,8 @@ namespace RevitNumbering.Revit.Selection
             uiDocument.Selection.SetElementIds(new List<ElementId> { elementId });
         }
 
-        private static void Collect(Element element, CategorySelectionFilter filter, HashSet<ElementId> visited,
+        // visited: an element picked alone and inside a group is taken once.
+        private static void Collect(Element element, RevitCategory category, HashSet<ElementId> visited,
             List<long> ids)
         {
             if (element == null || !visited.Add(element.Id))
@@ -101,10 +91,10 @@ namespace RevitNumbering.Revit.Selection
             {
                 foreach (ElementId memberId in members)
                 {
-                    Collect(element.Document.GetElement(memberId), filter, visited, ids);
+                    Collect(element.Document.GetElement(memberId), category, visited, ids);
                 }
             }
-            else if (filter.IsCategoryElement(element))
+            else if (category.Accepts(element))
             {
                 ids.Add(RevitIds.ToLong(element.Id));
             }

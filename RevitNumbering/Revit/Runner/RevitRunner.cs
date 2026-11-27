@@ -1,98 +1,66 @@
 using Autodesk.Revit.UI;
 using RevitNumbering.Core.Contracts;
+using RevitNumbering.Core.Logging;
+using RevitNumbering.Revit.Documents;
 
 namespace RevitNumbering.Revit.Runner
 {
-    /// <summary>
-    /// Runs actions of the window in the Revit API context through one ExternalEvent.
-    /// Holds one posted call at a time; waiting is asynchronous only (never .Result or .Wait()).
-    /// </summary>
+    // Runs window actions in the Revit API context through one ExternalEvent.
+    // Revit runs the action when it is free. One posted action at a time.
     internal sealed class RevitRunner : IRevitRunner, IExternalEventHandler
     {
-        private ExternalEvent _event;
-        private Func<object> _pending;
-        private TaskCompletionSource<object> _result;
+        private readonly RevitDocuments _documents;
+        private readonly FileLog _log;
+        private readonly ExternalEvent _event;
 
-        public bool IsExecuting { get; private set; }
+        // The posted action. Null: nothing is posted.
+        private Action _pending;
 
-        public bool IsPending => _pending != null;
-
-        /// <summary>The application of the running call: needed to pick and to show elements.</summary>
-        public UIApplication Application { get; private set; }
-
-        /// <summary>Called at the start of every call, before the action.</summary>
-        public Action<UIApplication> BeforeAction { get; set; }
-
-        /// <summary>ExternalEvent can be created only in the API context: call from OnStartup.</summary>
-        public void Initialize()
+        // Create it in OnStartup: ExternalEvent can be created only in the API context.
+        public RevitRunner(RevitDocuments documents, FileLog log)
         {
+            _documents = documents;
+            _log = log;
             _event = ExternalEvent.Create(this);
         }
 
-        public async Task<T> Run<T>(Func<T> action)
+        public bool Run(Action action)
         {
-            if (_pending != null || IsExecuting)
-            {
-                throw new InvalidOperationException("Only one Revit call at a time is supported.");
-            }
+            _pending = action;
 
-            var result = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pending = () => action();
-            _result = result;
-
-            // Pending: the event raised for a cancelled call has not run yet; it will run this call.
+            // Pending: the event of a dropped action has not run yet, so it will run this action.
             ExternalEventRequest request = _event.Raise();
-            if (request != ExternalEventRequest.Accepted && request != ExternalEventRequest.Pending)
+            if (request == ExternalEventRequest.Accepted || request == ExternalEventRequest.Pending)
             {
-                _pending = null;
-                _result = null;
-                throw new InvalidOperationException("ExternalEvent.Raise was not accepted: " + request);
+                return true;
             }
 
-            return (T)await result.Task;
-        }
-
-        public void CancelPending()
-        {
-            TaskCompletionSource<object> result = _result;
-            if (_pending == null)
-            {
-                return;
-            }
-
+            // The session logs the refusal together with the operation name.
             _pending = null;
-            _result = null;
-            result.SetCanceled();
+            return false;
         }
 
-        /// <summary>Called by Revit when it is free. An exception of the action goes to the task, not to Revit.</summary>
+        public bool CancelPending()
+        {
+            bool posted = _pending != null;
+            _pending = null;
+            return posted;
+        }
+
+        // Called by Revit when it is free.
         public void Execute(UIApplication app)
         {
-            Func<object> action = _pending;
-            TaskCompletionSource<object> result = _result;
+            Action action = _pending;
             _pending = null;
-            _result = null;
             if (action == null)
             {
-                // The call was cancelled before Revit got to it.
+                // The action was dropped before Revit got to it.
                 return;
             }
 
-            Application = app;
-            IsExecuting = true;
-            try
-            {
-                BeforeAction?.Invoke(app);
-                result.SetResult(action());
-            }
-            catch (Exception ex)
-            {
-                result.SetException(ex);
-            }
-            finally
-            {
-                IsExecuting = false;
-            }
+            // A view activation may have been missed while the action waited.
+            _documents.Refresh(app);
+            SafeRunner.Run(_log, "RevitCall", action);
         }
 
         public string GetName()
@@ -102,9 +70,8 @@ namespace RevitNumbering.Revit.Runner
 
         public void Dispose()
         {
-            CancelPending();
-            _event?.Dispose();
-            _event = null;
+            _pending = null;
+            _event.Dispose();
         }
     }
 }

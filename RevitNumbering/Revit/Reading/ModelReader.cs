@@ -5,14 +5,11 @@ using RevitNumbering.Revit.Common;
 
 namespace RevitNumbering.Revit.Reading
 {
-    /// <summary>
-    /// Reads elements of a category into NumberingItem. Knows no particular category: every difference
-    /// is asked from the RevitCategory. API context only.
-    /// </summary>
-    internal sealed class ModelReader
+    // Reads elements of a category into NumberingItem. It knows no particular category:
+    // every difference comes from RevitCategory. API context only.
+    internal static class ModelReader
     {
-        /// <summary>All elements of the category in one call, and the levels of the document.</summary>
-        public CategoryData Read(Document document, RevitCategory category)
+        public static CategoryData Read(Document document, RevitCategory category)
         {
             var data = new CategoryData { Levels = ReadLevels(document) };
             bool workshared = document.IsWorkshared;
@@ -20,7 +17,7 @@ namespace RevitNumbering.Revit.Reading
                 .OfCategory(category.Category)
                 .WhereElementIsNotElementType())
             {
-                if (!IsIgnored(element, category))
+                if (category.Accepts(element))
                 {
                     data.Items.Add(ReadItem(document, category, element, workshared));
                 }
@@ -29,24 +26,7 @@ namespace RevitNumbering.Revit.Reading
             return data;
         }
 
-        /// <summary>The given elements that belong to the category and are not ignored (for the live update).</summary>
-        public List<NumberingItem> ReadItems(Document document, RevitCategory category, List<long> ids)
-        {
-            var items = new List<NumberingItem>();
-            bool workshared = document.IsWorkshared;
-            foreach (long id in ids)
-            {
-                Element element = document.GetElement(RevitIds.ToElementId(id));
-                if (IsOfCategory(element, category) && !IsIgnored(element, category))
-                {
-                    items.Add(ReadItem(document, category, element, workshared));
-                }
-            }
-
-            return items;
-        }
-
-        public List<LevelInfo> ReadLevels(Document document)
+        private static List<LevelInfo> ReadLevels(Document document)
         {
             return new FilteredElementCollector(document)
                 .OfClass(typeof(Level))
@@ -58,22 +38,6 @@ namespace RevitNumbering.Revit.Reading
                     ElevationMm = RevitUnits.ToMm(level.ProjectElevation),
                 })
                 .ToList();
-        }
-
-        /// <summary>An instance of the category (not a type).</summary>
-        public static bool IsOfCategory(Element element, RevitCategory category)
-        {
-            return element != null
-                && element.IsValidObject
-                && !(element is ElementType)
-                && element.Category != null
-                && element.Category.Id == new ElementId(category.Category);
-        }
-
-        /// <summary>Ignored completely: secondary design options and what the category excludes.</summary>
-        public static bool IsIgnored(Element element, RevitCategory category)
-        {
-            return ElementFacts.IsInSecondaryOption(element) || category.IsExcluded(element);
         }
 
         private static NumberingItem ReadItem(Document document, RevitCategory category, Element element,

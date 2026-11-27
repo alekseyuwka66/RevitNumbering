@@ -2,9 +2,7 @@ using Autodesk.Revit.DB;
 
 namespace RevitNumbering.Revit.Common
 {
-    /// <summary>
-    /// The only place where ElementId differs between Revit 2022 and 2024+. In the core an id is a long.
-    /// </summary>
+    // The only place where ElementId differs between Revit 2022 and 2024+. The core uses long.
     internal static class RevitIds
     {
         public static long ToLong(ElementId id)
@@ -31,7 +29,7 @@ namespace RevitNumbering.Revit.Common
         }
     }
 
-    /// <summary>Internal units (feet) to the units of the core (mm).</summary>
+    // Internal units (feet) to the units of the core (mm).
     internal static class RevitUnits
     {
         public static double ToMm(double feet)

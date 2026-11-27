@@ -13,7 +13,7 @@ namespace RevitNumbering.Revit.Categories
 
         public override BuiltInParameter NumberParameter => BuiltInParameter.ALL_MODEL_MARK;
 
-        /// <summary>A stacked wall is excluded together with its members.</summary>
+        // A stacked wall is excluded together with its members.
         public override bool IsExcluded(Element element)
         {
             return base.IsExcluded(element)
@@ -47,7 +47,7 @@ namespace RevitNumbering.Revit.Categories
 
         public override BuiltInParameter NumberParameter => BuiltInParameter.ROOM_NUMBER;
 
-        /// <summary>ROOM_NAME, not Element.Name: the name of a room element contains its number.</summary>
+        // ROOM_NAME, not Element.Name: the element name of a room contains its number.
         public override string GetName(Element element)
         {
             return element.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? string.Empty;
@@ -55,10 +55,10 @@ namespace RevitNumbering.Revit.Categories
 
         public override XYZ GetPoint(Element element)
         {
-            return ElementFacts.BoundingBoxCenter(element);
+            return BoundingBoxCenter(element);
         }
 
-        /// <summary>Not placed, redundant and not enclosed rooms keep their numbers.</summary>
+        // Rooms that are not placed, not enclosed or redundant keep their numbers.
         public override LockReason GetLock(Element element)
         {
             if (!(element is Room room))
@@ -76,14 +76,14 @@ namespace RevitNumbering.Revit.Categories
                 return LockReason.None;
             }
 
-            // Boundaries are queried only when the area is zero.
+            // Boundaries are read only when the area is zero.
             IList<IList<BoundarySegment>> boundaries = room.GetBoundarySegments(new SpatialElementBoundaryOptions());
             return boundaries != null && boundaries.Count > 0
                 ? LockReason.RoomRedundant
                 : LockReason.RoomNotEnclosed;
         }
 
-        /// <summary>Room numbers repeat only inside one phase.</summary>
+        // Room numbers must be unique only inside one phase.
         public override string GetConflictGroup(Element element)
         {
             ElementId phaseId = element.get_Parameter(BuiltInParameter.ROOM_PHASE)?.AsElementId();

@@ -1,34 +1,32 @@
 using System.Diagnostics;
 using Autodesk.Revit.DB;
 using RevitNumbering.Core.Contracts;
-using RevitNumbering.Core.Logging;
 using RevitNumbering.Revit.Categories;
 using RevitNumbering.Revit.Common;
+using RevitNumbering.UI.Resources;
 
 namespace RevitNumbering.Revit.Writing
 {
-    /// <summary>
-    /// Writes numbers as one step of the undo history: a transaction group with a transaction per element,
-    /// so that an element Revit refuses does not stop the others. Shows no Revit dialogs.
-    /// </summary>
-    internal sealed class ModelWriter
+    // Writes numbers as one undo step: a transaction group with one transaction per batch of elements.
+    // A batch is one commit, so updaters and schedules of the model work once per batch, not once per element.
+    // An element that Revit refuses does not stop the others. If a batch commit fails,
+    // the batch is written element by element. Shows no Revit dialogs.
+    internal static class ModelWriter
     {
-        /// <summary>The name of the step in the undo history of Revit.</summary>
-        private const string TransactionName = "Нумерация элементов";
+        // Elements per transaction. The window redraws only between batches, so a batch must stay short.
+        private const int BatchSize = 150;
 
-        private readonly ILog _log;
+        // The least time between two pauses that redraw the window and read Cancel.
+        // Each pause costs Revit a redraw, which takes longer than a small batch.
+        private const int ProgressIntervalMs = 800;
 
-        public ModelWriter(ILog log)
-        {
-            _log = log;
-        }
-
-        public WriteResult Write(Document document, RevitCategory category, List<WriteItem> items)
+        public static WriteResult Write(Document document, RevitCategory category, List<WriteItem> items,
+            IWriteProgress progress)
         {
             var result = new WriteResult();
             Stopwatch watch = Stopwatch.StartNew();
 
-            // Checks before writing: such elements are not touched at all.
+            // Checks before writing. Elements that fail a check are not touched.
             var checkedItems = new List<KeyValuePair<Parameter, WriteItem>>();
             bool workshared = document.IsWorkshared;
             foreach (WriteItem item in items)
@@ -44,28 +42,38 @@ namespace RevitNumbering.Revit.Writing
                 }
             }
 
-            long checkMs = watch.ElapsedMilliseconds;
+            long lastProgressAt = watch.ElapsedMilliseconds;
             if (checkedItems.Count > 0)
             {
-                using (var group = new TransactionGroup(document, TransactionName))
+                using (var group = new TransactionGroup(document, Texts.TransactionName))
                 {
                     group.Start();
-                    foreach (KeyValuePair<Parameter, WriteItem> pair in checkedItems)
+                    for (int start = 0; start < checkedItems.Count; start += BatchSize)
                     {
-                        WriteFailure failure = WriteOne(document, pair.Key, pair.Value);
-                        if (failure == null)
+                        List<KeyValuePair<Parameter, WriteItem>> batch =
+                            checkedItems.GetRange(start, Math.Min(BatchSize, checkedItems.Count - start));
+
+                        WriteBatch(document, category, batch, result);
+
+                        int done = start + batch.Count;
+                        // The window redraws and reads Cancel not after every batch, but at most once per ProgressIntervalMs.
+                        bool goOn = true;
+                        if (progress != null && done < checkedItems.Count
+                            && watch.ElapsedMilliseconds - lastProgressAt >= ProgressIntervalMs)
                         {
-                            result.WrittenCount++;
+                            goOn = progress.Continue(done, checkedItems.Count);
+                            lastProgressAt = watch.ElapsedMilliseconds;
                         }
-                        else
+
+                        if (!goOn)
                         {
-                            result.Failures.Add(failure);
+                            group.RollBack();
+                            return new WriteResult { Cancelled = true };
                         }
                     }
 
                     if (result.WrittenCount > 0)
                     {
-                        // One step in the undo history.
                         group.Assimilate();
                     }
                     else
@@ -75,10 +83,73 @@ namespace RevitNumbering.Revit.Writing
                 }
             }
 
-            _log.Info("[Write] " + category.Key + ": " + items.Count + " requested, " + result.WrittenCount
-                + " written, " + result.Failures.Count + " failed; checks " + checkMs + " ms, transactions "
-                + (watch.ElapsedMilliseconds - checkMs) + " ms");
             return result;
+        }
+
+        // The fast path: the whole batch in one transaction. If the commit fails (an updater error,
+        // a model failure), the batch is written element by element, so only the bad elements are lost.
+        private static void WriteBatch(Document document, RevitCategory category,
+            List<KeyValuePair<Parameter, WriteItem>> batch, WriteResult result)
+        {
+            var rejected = new List<WriteFailure>();
+            if (TryWriteTransaction(document, batch, rejected))
+            {
+                result.WrittenCount += batch.Count - rejected.Count;
+                result.Failures.AddRange(rejected);
+                return;
+            }
+
+            foreach (KeyValuePair<Parameter, WriteItem> pair in batch)
+            {
+                // Take the parameter again: after a rolled back transaction the old object may be invalid.
+                Element element = document.GetElement(RevitIds.ToElementId(pair.Value.Id));
+                Parameter parameter = element != null && element.IsValidObject
+                    ? element.get_Parameter(category.NumberParameter)
+                    : null;
+                WriteFailure failure = parameter == null
+                    ? Failure(pair.Value, WriteFailReason.Deleted, null)
+                    : WriteOne(document, parameter, pair.Value);
+                if (failure == null)
+                {
+                    result.WrittenCount++;
+                }
+                else
+                {
+                    result.Failures.Add(failure);
+                }
+            }
+        }
+
+        // One transaction for the batch. rejected gets the elements that Revit refused.
+        private static bool TryWriteTransaction(Document document, List<KeyValuePair<Parameter, WriteItem>> batch,
+            List<WriteFailure> rejected)
+        {
+            using (var transaction = new Transaction(document, Texts.TransactionName))
+            {
+                var handler = new WriteFailureHandler();
+                FailureHandlingOptions options = transaction.GetFailureHandlingOptions();
+                options.SetFailuresPreprocessor(handler);
+                options.SetClearAfterRollback(true);
+                transaction.SetFailureHandlingOptions(options);
+                transaction.Start();
+
+                foreach (KeyValuePair<Parameter, WriteItem> pair in batch)
+                {
+                    try
+                    {
+                        if (!pair.Key.Set(pair.Value.Value))
+                        {
+                            rejected.Add(Failure(pair.Value, WriteFailReason.Rejected, null));
+                        }
+                    }
+                    catch (Autodesk.Revit.Exceptions.ApplicationException ex)
+                    {
+                        rejected.Add(Failure(pair.Value, WriteFailReason.Rejected, ex.Message));
+                    }
+                }
+
+                return transaction.Commit() == TransactionStatus.Committed;
+            }
         }
 
         private static WriteFailure Check(Document document, RevitCategory category, WriteItem item, bool workshared,
@@ -115,10 +186,10 @@ namespace RevitNumbering.Revit.Writing
             return null;
         }
 
-        /// <summary>One element in its own transaction. null: written.</summary>
+        // One element in its own transaction. Returns null when it is written.
         private static WriteFailure WriteOne(Document document, Parameter parameter, WriteItem item)
         {
-            using (var transaction = new Transaction(document, TransactionName))
+            using (var transaction = new Transaction(document, Texts.TransactionName))
             {
                 var handler = new WriteFailureHandler();
                 FailureHandlingOptions options = transaction.GetFailureHandlingOptions();
@@ -157,13 +228,11 @@ namespace RevitNumbering.Revit.Writing
         }
     }
 
-    /// <summary>
-    /// Failure handling of one transaction: the "duplicate value" warning is deleted silently; any other
-    /// warning or error rolls the transaction back and its text is kept. Failures are never resolved.
-    /// </summary>
+    // Failure handling of one transaction. Every warning is deleted silently, so the user does not get
+    // a series of Revit messages. An error rolls the transaction back, and its text goes to the summary.
     internal sealed class WriteFailureHandler : IFailuresPreprocessor
     {
-        /// <summary>Text of the first failure that rolled the transaction back.</summary>
+        // Text of the first failure that rolled the transaction back.
         public string FailureText { get; private set; }
 
         public FailureProcessingResult PreprocessFailures(FailuresAccessor failuresAccessor)
@@ -171,8 +240,7 @@ namespace RevitNumbering.Revit.Writing
             bool rollBack = false;
             foreach (FailureMessageAccessor message in failuresAccessor.GetFailureMessages())
             {
-                if (message.GetSeverity() == FailureSeverity.Warning
-                    && message.GetFailureDefinitionId()?.Guid == BuiltInFailures.GeneralFailures.DuplicateValue.Guid)
+                if (message.GetSeverity() == FailureSeverity.Warning)
                 {
                     failuresAccessor.DeleteWarning(message);
                     continue;
